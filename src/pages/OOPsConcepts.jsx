@@ -14,6 +14,17 @@ import { oopsConcepts } from '../data/oops';
 import CodeEditor from '../components/CodeEditor';
 
 export default function OOPsConcepts({ navigationPayload, setNavigationPayload }) {
+  const activeUser = React.useMemo(() => {
+    try {
+      const saved = localStorage.getItem('wingora_active_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  }, []);
+
+  const userSuffix = activeUser?.userID ? `_${activeUser.userID}` : '';
+
   const [selectedConceptId, setSelectedConceptId] = useState(oopsConcepts[0].id);
   const [activeSubTab, setActiveSubTab] = useState('analogy'); // 'analogy', 'blueprint', 'drills'
   const [revealedQuestionIdx, setRevealedQuestionIdx] = useState(null);
@@ -21,9 +32,13 @@ export default function OOPsConcepts({ navigationPayload, setNavigationPayload }
 
   // Load completed items from local storage
   useEffect(() => {
-    const list = JSON.parse(localStorage.getItem('completed_oops') || '[]');
+    const list = JSON.parse(
+      localStorage.getItem(`completed_oops${userSuffix}`) ||
+      localStorage.getItem('completed_oops') ||
+      '[]'
+    );
     setCompletedOopsList(list);
-  }, []);
+  }, [userSuffix]);
 
   // Handle payload from global search
   useEffect(() => {
@@ -42,14 +57,19 @@ export default function OOPsConcepts({ navigationPayload, setNavigationPayload }
   // Save to recently viewed
   useEffect(() => {
     if (!currentConcept) return;
-    const recent = JSON.parse(localStorage.getItem('recently_viewed') || '[]');
+    const recent = JSON.parse(
+      localStorage.getItem(`recently_viewed${userSuffix}`) ||
+      localStorage.getItem('recently_viewed') ||
+      '[]'
+    );
     const filtered = recent.filter(item => !(item.type === 'oops' && item.target === currentConcept.id));
     const updated = [
       { type: 'oops', name: `OOPs: ${currentConcept.title}`, target: currentConcept.id },
       ...filtered
     ].slice(0, 5);
+    localStorage.setItem(`recently_viewed${userSuffix}`, JSON.stringify(updated));
     localStorage.setItem('recently_viewed', JSON.stringify(updated));
-  }, [selectedConceptId]);
+  }, [selectedConceptId, userSuffix]);
 
   const toggleOopsComplete = (id) => {
     let updated;
@@ -59,6 +79,7 @@ export default function OOPsConcepts({ navigationPayload, setNavigationPayload }
       updated = [...completedOopsList, id];
     }
     setCompletedOopsList(updated);
+    localStorage.setItem(`completed_oops${userSuffix}`, JSON.stringify(updated));
     localStorage.setItem('completed_oops', JSON.stringify(updated));
   };
 
@@ -243,6 +264,11 @@ export default function OOPsConcepts({ navigationPayload, setNavigationPayload }
           flex-direction: column;
           gap: 0.85rem;
           height: 100%;
+          color: white;
+        }
+
+        [data-theme='light'] .oops-grid-card {
+          color: black;
         }
 
         .oops-card-top {
@@ -259,6 +285,11 @@ export default function OOPsConcepts({ navigationPayload, setNavigationPayload }
         .oops-grid-card.active-grid {
           border-color: hsl(var(--primary));
           background: hsl(var(--primary) / 0.1);
+          color: white;
+        }
+
+        [data-theme='light'] .oops-grid-card.active-grid {
+          color: hsl(var(--primary));
         }
 
         .oops-grid-card.active-grid .oops-icon {
@@ -276,6 +307,7 @@ export default function OOPsConcepts({ navigationPayload, setNavigationPayload }
         .oops-grid-card h3 {
           font-size: 1.05rem;
           font-weight: 700;
+          color: inherit;
         }
 
         .oops-concept-viewport {

@@ -8,6 +8,8 @@ import {
   ArrowLeft, 
   BookOpen, 
   ChevronRight, 
+  ChevronLeft,
+  ChevronDown,
   Calculator, 
   GitBranch, 
   FileText, 
@@ -740,14 +742,122 @@ function generateAptitudeQuestions(day, category) {
 }
 
 export default function TcsAptitude() {
+  const activeUser = React.useMemo(() => {
+    try {
+      const saved = localStorage.getItem('wingora_active_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  }, []);
+
+  const userSuffix = activeUser?.userID ? `_${activeUser.userID}` : '';
+
+  // --- SCROLL UTILITIES ---
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [isCursorGrabbing, setIsCursorGrabbing] = useState(false);
+
+  const scrollContainerRef = React.useRef(null);
+  const isDragging = React.useRef(false);
+  const dragStart = React.useRef({ x: 0, scrollLeft: 0 });
+  const dragMoved = React.useRef(false);
+
+  const updateScrollButtons = React.useCallback(() => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      // Fallback: if layout is not ready, default to allowing right scroll
+      if (scrollWidth === 0) {
+        setCanScrollLeft(false);
+        setCanScrollRight(true);
+        return;
+      }
+      setCanScrollLeft(scrollLeft > 5);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  }, []);
+
+  const setScrollContainerRef = React.useCallback((node) => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.removeEventListener('scroll', updateScrollButtons);
+    }
+    scrollContainerRef.current = node;
+    if (node) {
+      node.addEventListener('scroll', updateScrollButtons);
+      setTimeout(updateScrollButtons, 150);
+    }
+  }, [updateScrollButtons]);
+
+  React.useEffect(() => {
+    window.addEventListener('resize', updateScrollButtons);
+    return () => {
+      window.removeEventListener('resize', updateScrollButtons);
+    };
+  }, [updateScrollButtons]);
+
+  const scrollDays = (direction) => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 300;
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleWheel = (e) => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const canScrollLeftDirection = container.scrollLeft > 0 && e.deltaY < 0;
+      const canScrollRightDirection = container.scrollLeft + container.clientWidth < container.scrollWidth && e.deltaY > 0;
+      
+      if (canScrollLeftDirection || canScrollRightDirection) {
+        e.preventDefault();
+        container.scrollLeft += e.deltaY;
+      }
+    }
+  };
+
+  const handleMouseDown = (e) => {
+    if (!scrollContainerRef.current) return;
+    isDragging.current = true;
+    dragMoved.current = false;
+    setIsCursorGrabbing(true);
+    dragStart.current = {
+      x: e.clientX,
+      scrollLeft: scrollContainerRef.current.scrollLeft
+    };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current || !scrollContainerRef.current) return;
+    const dx = e.clientX - dragStart.current.x;
+    if (Math.abs(dx) > 5) {
+      dragMoved.current = true;
+    }
+    scrollContainerRef.current.scrollLeft = dragStart.current.scrollLeft - dx;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDragging.current = false;
+    setIsCursorGrabbing(false);
+    setTimeout(() => {
+      dragMoved.current = false;
+    }, 50);
+  };
+
   // --- STATES ---
   const [selectedDay, setSelectedDay] = useState(() => {
     try {
-      const meta = localStorage.getItem('wingora_tcs_user_meta');
+      const saved = localStorage.getItem('wingora_active_user');
+      const parsed = saved ? JSON.parse(saved) : null;
+      const suffix = parsed?.userID ? `_${parsed.userID}` : '';
+      const meta = localStorage.getItem(`wingora_tcs_user_meta${suffix}`) ||
+                   localStorage.getItem('wingora_tcs_user_meta');
       if (meta) {
-        const parsed = JSON.parse(meta);
-        if (parsed && parsed.current_unlocked_day) {
-          return parsed.current_unlocked_day;
+        const parsedMeta = JSON.parse(meta);
+        if (parsedMeta && parsedMeta.current_unlocked_day) {
+          return parsedMeta.current_unlocked_day;
         }
       }
     } catch (e) {}
@@ -763,15 +873,19 @@ export default function TcsAptitude() {
   const [checkedAnswer, setCheckedAnswer] = useState(false);
   const [score, setScore] = useState(0);
   const [sessionAnswers, setSessionAnswers] = useState([]); // list of { questionId, selectedIndex, isCorrect }
-
+ 
   // Reset Confirmation Modal
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-
+ 
   // Cooldown & Progress tracking
   const [progress, setProgress] = useState(() => {
     try {
-      const saved = localStorage.getItem('wingora_tcs_aptitude_progress');
-      return saved ? JSON.parse(saved) : {};
+      const saved = localStorage.getItem('wingora_active_user');
+      const parsed = saved ? JSON.parse(saved) : null;
+      const suffix = parsed?.userID ? `_${parsed.userID}` : '';
+      const savedProg = localStorage.getItem(`wingora_tcs_aptitude_progress${suffix}`) ||
+                        localStorage.getItem('wingora_tcs_aptitude_progress');
+      return savedProg ? JSON.parse(savedProg) : {};
     } catch (e) {
       return {};
     }
@@ -786,6 +900,12 @@ export default function TcsAptitude() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (currentScreen === 'lobby') {
+      setTimeout(updateScrollButtons, 200);
+    }
+  }, [currentScreen, updateScrollButtons]);
+
   // --- PROGRESSION & COOLDOWN HELPERS ---
   const getAptitudeDayStatus = (dayNum, category) => {
     const catProgress = progress[category] || {};
@@ -795,29 +915,14 @@ export default function TcsAptitude() {
       return { status: 'completed', score: dayProg.score };
     }
 
-    if (dayNum === 1) {
-      return { status: 'unlocked' };
-    }
-
-    // Check if the previous day is completed
-    const prevProg = catProgress[dayNum - 1];
-    if (!prevProg || prevProg.status !== 'completed') {
-      return { status: 'locked' };
-    }
-
-    // Previous day is completed! Check 10-hour cooldown
-    if (prevProg.completedAt) {
-      const completedTime = new Date(prevProg.completedAt).getTime();
-      const COOLDOWN_DURATION = 10 * 60 * 60 * 1000; // 10 hours
-      const elapsedTime = currentTime - completedTime;
-
-      if (elapsedTime < COOLDOWN_DURATION) {
-        const remainingTime = COOLDOWN_DURATION - elapsedTime;
-        return { 
-          status: 'cooldown', 
-          remainingTime,
-          unlocksAt: completedTime + COOLDOWN_DURATION
-        };
+    // Check if previous day is fully completed
+    if (dayNum > 1) {
+      const prevQuant = progress['Quantitative Aptitude']?.[dayNum - 1]?.status === 'completed';
+      const prevLogic = progress['Logical Reasoning']?.[dayNum - 1]?.status === 'completed';
+      const prevVerbal = progress['Verbal Ability']?.[dayNum - 1]?.status === 'completed';
+      
+      if (!prevQuant || !prevLogic || !prevVerbal) {
+        return { status: 'locked' };
       }
     }
 
@@ -825,8 +930,6 @@ export default function TcsAptitude() {
   };
 
   const getOverallDayStatus = (d) => {
-    if (d === 1) return 'unlocked';
-
     const quantStatus = getAptitudeDayStatus(d, 'Quantitative Aptitude').status;
     const logicStatus = getAptitudeDayStatus(d, 'Logical Reasoning').status;
     const verbalStatus = getAptitudeDayStatus(d, 'Verbal Ability').status;
@@ -853,6 +956,11 @@ export default function TcsAptitude() {
     const statusInfo = getAptitudeDayStatus(selectedDay, category);
     if (statusInfo.status === 'locked' || statusInfo.status === 'cooldown') {
       return; // click disabled in UI, but safety check
+    }
+
+    if (statusInfo.status === 'completed') {
+      const confirmRedo = window.confirm(`You have already completed the Day ${selectedDay} ${category} test. Do you want to redo this test?`);
+      if (!confirmRedo) return;
     }
 
     const generated = generateAptitudeQuestions(selectedDay, category);
@@ -910,6 +1018,7 @@ export default function TcsAptitude() {
       };
       
       setProgress(updatedProgress);
+      localStorage.setItem(`wingora_tcs_aptitude_progress${userSuffix}`, JSON.stringify(updatedProgress));
       localStorage.setItem('wingora_tcs_aptitude_progress', JSON.stringify(updatedProgress));
 
       setCurrentScreen('summary');
@@ -922,6 +1031,7 @@ export default function TcsAptitude() {
   };
 
   const executeResetAptitudeProgress = () => {
+    localStorage.removeItem(`wingora_tcs_aptitude_progress${userSuffix}`);
     localStorage.removeItem('wingora_tcs_aptitude_progress');
     setProgress({});
     setSelectedDay(1);
@@ -1104,52 +1214,124 @@ export default function TcsAptitude() {
               <span style={{fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'hsl(var(--primary))'}}>Select Prep Day (1 – 75)</span>
             </div>
             
-            <div style={{display:'flex', gap:'0.5rem', overflowX:'auto', paddingBottom:'0.5rem'}}>
-              {Array.from({ length: 75 }, (_, i) => i + 1).map((d) => {
-                const isSelected = selectedDay === d;
-                const overallStatus = getOverallDayStatus(d);
-                
-                let btnBg = 'rgba(15,15,25,0.6)';
-                let btnBorder = '1.5px solid rgba(255,255,255,0.07)';
-                let btnColor = '#64748b';
-                let btnShadow = 'none';
-                let btnOpacity = 1;
-                let btnCursor = 'pointer';
+            <div style={{display:'flex', alignItems:'center', gap:'0.75rem', flexWrap:'wrap'}}>
+              {/* Left Arrow Button */}
+              <button 
+                onClick={() => setSelectedDay(prev => Math.max(1, prev - 1))}
+                disabled={selectedDay === 1}
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: selectedDay === 1 ? 'default' : 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: selectedDay === 1 ? 0.2 : 1,
+                  pointerEvents: selectedDay === 1 ? 'none' : 'auto'
+                }}
+                onMouseEnter={(e) => { if (selectedDay !== 1) e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+                onMouseLeave={(e) => { if (selectedDay !== 1) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                title="Previous Day"
+              >
+                <ChevronLeft size={18} />
+              </button>
 
-                if (isSelected) {
-                  btnBg = 'linear-gradient(135deg, #7c3aed, #6d28d9)';
-                  btnBorder = '1.5px solid rgba(139,92,246,0.65)';
-                  btnColor = '#fff';
-                  btnShadow = '0 0 14px rgba(139,92,246,0.5)';
-                } else if (overallStatus === 'completed') {
-                  btnBg = 'rgba(16,185,129,0.1)';
-                  btnBorder = '1.5px solid rgba(16,185,129,0.3)';
-                  btnColor = '#34d399';
-                } else if (overallStatus === 'locked') {
-                  btnOpacity = 0.35;
-                  btnCursor = 'not-allowed';
-                }
+              {/* Styled Dropdown Selector */}
+              <div style={{position:'relative', display:'flex', alignItems:'center'}}>
+                <select
+                  value={selectedDay}
+                  onChange={(e) => setSelectedDay(Number(e.target.value))}
+                  style={{
+                    background: 'rgba(10,12,22,0.8)',
+                    border: '1px solid rgba(139,92,246,0.25)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    padding: '0.5rem 2.5rem 0.5rem 1rem',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    outline: 'none',
+                    minWidth: '130px',
+                    textAlign: 'center',
+                    fontFamily: 'monospace'
+                  }}
+                >
+                  {Array.from({ length: 75 }, (_, i) => i + 1).map((d) => {
+                    const isLocked = d > 1 && getOverallDayStatus(d - 1) !== 'completed';
+                    return (
+                      <option key={d} value={d} disabled={isLocked} style={{ background: '#0a0c16', color: isLocked ? '#475569' : '#fff' }}>
+                        Day {d} {getOverallDayStatus(d) === 'completed' ? '✓' : isLocked ? '(Locked)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+                {/* Arrow indicator for dropdown */}
+                <div style={{ position: 'absolute', right: '1rem', pointerEvents: 'none', display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.6)' }}>
+                  <ChevronDown size={14} />
+                </div>
+              </div>
 
-                return (
-                  <button
-                    key={d}
-                    disabled={overallStatus === 'locked' && !isSelected}
-                    onClick={() => setSelectedDay(d)}
-                    style={{
-                      padding:'0.45rem 0.75rem', borderRadius:'8px',
-                      fontSize:'0.72rem', fontFamily:'monospace', fontWeight:700,
-                      background: btnBg, border: btnBorder, color: btnColor,
-                      boxShadow: btnShadow, opacity: btnOpacity, cursor: btnCursor,
-                      flexShrink:0, display:'flex', alignItems:'center', gap:'0.3rem',
-                      transition:'all 0.2s ease', whiteSpace:'nowrap'
-                    }}
-                  >
-                    {overallStatus === 'locked' && <Lock size={9} />}
-                    {overallStatus === 'completed' && <CheckCircle size={9} />}
-                    <span>Day {d}</span>
-                  </button>
-                );
-              })}
+              {/* Right Arrow Button */}
+              <button 
+                onClick={() => setSelectedDay(prev => Math.min(75, prev + 1))}
+                disabled={selectedDay === 75 || getOverallDayStatus(selectedDay) !== 'completed'}
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: (selectedDay === 75 || getOverallDayStatus(selectedDay) !== 'completed') ? 'default' : 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: (selectedDay === 75 || getOverallDayStatus(selectedDay) !== 'completed') ? 0.2 : 1,
+                  pointerEvents: (selectedDay === 75 || getOverallDayStatus(selectedDay) !== 'completed') ? 'none' : 'auto'
+                }}
+                onMouseEnter={(e) => { if (selectedDay !== 75 && getOverallDayStatus(selectedDay) === 'completed') e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+                onMouseLeave={(e) => { if (selectedDay !== 75 && getOverallDayStatus(selectedDay) === 'completed') e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                title="Next Day"
+              >
+                <ChevronRight size={18} />
+              </button>
+
+              {/* Overall Day Status Badge */}
+              <div style={{
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.4rem', 
+                padding: '0.4rem 0.8rem', 
+                borderRadius: '8px', 
+                background: getOverallDayStatus(selectedDay) === 'completed' ? 'rgba(16,185,129,0.1)' : 'rgba(139,92,246,0.1)',
+                border: getOverallDayStatus(selectedDay) === 'completed' ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(139,92,246,0.2)',
+                color: getOverallDayStatus(selectedDay) === 'completed' ? '#34d399' : 'hsl(var(--primary))',
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                {getOverallDayStatus(selectedDay) === 'completed' ? (
+                  <>
+                    <CheckCircle size={12} />
+                    <span>Completed</span>
+                  </>
+                ) : (
+                  <>
+                    <Brain size={12} />
+                    <span>In Progress</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1816,6 +1998,14 @@ export default function TcsAptitude() {
           color: #fca5a5 !important;
           box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 15px rgba(239, 68, 68, 0.1) !important;
           text-shadow: 0 0 8px rgba(239, 68, 68, 0.4) !important;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>

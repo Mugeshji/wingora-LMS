@@ -10,12 +10,24 @@ import {
   Award,
   BookOpen,
   UserCheck,
-  Cpu
+  Cpu,
+  X
 } from 'lucide-react';
 import { javaQuestions, dsaQuestions, hrQuestions } from '../data/interviewQuestions';
 import TypingAnimation from '../components/TypingAnimation';
 
 export default function AIInterview() {
+  const activeUser = React.useMemo(() => {
+    try {
+      const saved = localStorage.getItem('wingora_active_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  }, []);
+
+  const userSuffix = activeUser?.userID ? `_${activeUser.userID}` : '';
+
   const [interviewStarted, setInterviewStarted] = useState(false);
   const [category, setCategory] = useState("Adaptive"); // "Java", "DSA", "HR", "Adaptive"
   const [currentDiff, setCurrentDiff] = useState("Easy"); // "Easy", "Medium", "Hard"
@@ -70,8 +82,81 @@ export default function AIInterview() {
     return `${m}:${s}`;
   };
 
+  const [cooldowns, setCooldowns] = useState({
+    Java: 0,
+    DSA: 0,
+    HR: 0,
+    Adaptive: 0
+  });
+
+  useEffect(() => {
+    const checkCooldowns = () => {
+      const categories = ["Java", "DSA", "HR", "Adaptive"];
+      const updatedCooldowns = {};
+      const cooldownDuration = 12 * 60 * 60 * 1000; // 12 hours in ms
+      
+      categories.forEach(cat => {
+        const lastTimeStr = localStorage.getItem(`last_interview_time_${cat}${userSuffix}`) ||
+                             localStorage.getItem(`last_interview_time_${cat}`);
+        if (lastTimeStr) {
+          const lastTime = parseInt(lastTimeStr, 10);
+          const elapsed = Date.now() - lastTime;
+          if (elapsed < cooldownDuration) {
+            updatedCooldowns[cat] = Math.ceil((cooldownDuration - elapsed) / 1000);
+            return;
+          }
+        }
+        updatedCooldowns[cat] = 0;
+      });
+      
+      setCooldowns(updatedCooldowns);
+    };
+
+    checkCooldowns();
+    const interval = setInterval(checkCooldowns, 1000);
+    return () => clearInterval(interval);
+  }, [userSuffix]);
+
+  const formatCooldownTime = (totalSeconds) => {
+    const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${h}h ${m}m ${s}s`;
+  };
+
+  const getFilteredCandidates = (dataset, nextDifficulty, askedIds) => {
+    let candidates = dataset.filter(q => q.difficulty === nextDifficulty);
+    if (candidates.length === 0) {
+      candidates = dataset; // Fallback
+    }
+
+    let answeredIds = [];
+    try {
+      answeredIds = JSON.parse(
+        localStorage.getItem(`answered_interview_question_ids${userSuffix}`) ||
+        localStorage.getItem('answered_interview_question_ids') ||
+        '[]'
+      );
+    } catch (e) {}
+
+    let freshCandidates = candidates.filter(q => !answeredIds.includes(q.id) && !askedIds.includes(q.id));
+    if (freshCandidates.length === 0) {
+      // Reset answered list if we run out of fresh questions
+      try {
+        localStorage.setItem(`answered_interview_question_ids${userSuffix}`, '[]');
+        localStorage.setItem('answered_interview_question_ids', '[]');
+      } catch(e) {}
+      freshCandidates = candidates.filter(q => !askedIds.includes(q.id));
+    }
+    
+    if (freshCandidates.length === 0) {
+      freshCandidates = candidates; // Absolute fallback
+    }
+    return freshCandidates;
+  };
+
   // Select next question adaptively
-  const getNextQuestion = (feedback = null) => {
+  const getNextQuestion = (feedback = null, currentAskedIds = []) => {
     let nextDifficulty = currentDiff;
     
     // Adapt difficulty based on performance
@@ -94,18 +179,8 @@ export default function AIInterview() {
       dataset = [...javaQuestions, ...dsaQuestions];
     }
 
-    // Attempt to match difficulty first
-    let candidates = dataset.filter(q => q.difficulty === nextDifficulty);
-    if (candidates.length === 0) {
-      candidates = dataset; // Fallback
-    }
-
-    // Exclude previously asked questions
-    const askedIds = history.map(h => h.question.id);
-    let freshCandidates = candidates.filter(q => !askedIds.includes(q.id));
-    if (freshCandidates.length === 0) {
-      freshCandidates = candidates; // Reset list if all consumed
-    }
+    // Exclude previously asked questions in the current session
+    const freshCandidates = getFilteredCandidates(dataset, nextDifficulty, currentAskedIds);
 
     // Select randomly
     const randomQ = freshCandidates[Math.floor(Math.random() * freshCandidates.length)];
@@ -119,6 +194,8 @@ export default function AIInterview() {
   };
 
   const startInterviewLoop = (selectedCat) => {
+    if (cooldowns[selectedCat] > 0) return;
+
     playSound(800, 0.15);
     setCategory(selectedCat);
     setHistory([]);
@@ -129,10 +206,9 @@ export default function AIInterview() {
     
     // Wait tiny bit for state sync
     setTimeout(() => {
-      // Inline generation for first question
       let dataset = selectedCat === "Java" ? javaQuestions : selectedCat === "DSA" ? dsaQuestions : selectedCat === "HR" ? hrQuestions : [...javaQuestions, ...dsaQuestions];
-      const candidates = dataset.filter(q => q.difficulty === "Easy");
-      const randomQ = candidates[Math.floor(Math.random() * candidates.length)] || dataset[0];
+      const freshCandidates = getFilteredCandidates(dataset, "Easy", []);
+      const randomQ = freshCandidates[Math.floor(Math.random() * freshCandidates.length)] || dataset[0];
       
       setActiveQuestion(randomQ);
       setSeconds(0);
@@ -143,15 +219,15 @@ export default function AIInterview() {
   };
 
   const handleFeedback = (performance) => {
+    // Create the updated history entry
+    const newHistoryEntry = {
+      question: activeQuestion,
+      time: seconds,
+      rating: performance // "nailed" or "practice"
+    };
+
     // Save to history log
-    setHistory(prev => [
-      ...prev,
-      {
-        question: activeQuestion,
-        time: seconds,
-        rating: performance // "nailed" or "practice"
-      }
-    ]);
+    setHistory(prev => [...prev, newHistoryEntry]);
     
     setIsTimerRunning(false);
 
@@ -163,11 +239,39 @@ export default function AIInterview() {
         playSound(1000, 0.3);
         
         // Log interview count to local storage
-        const counts = parseInt(localStorage.getItem('completed_interviews') || '0', 10);
-        localStorage.setItem('completed_interviews', (counts + 1).toString());
+        const counts = parseInt(
+          localStorage.getItem(`completed_interviews${userSuffix}`) ||
+          localStorage.getItem('completed_interviews') || '0',
+          10
+        );
+        const newCounts = (counts + 1).toString();
+        localStorage.setItem(`completed_interviews${userSuffix}`, newCounts);
+        localStorage.setItem('completed_interviews', newCounts);
+
+        // Enforce 12-hour cooldown for this specific category/concept track
+        const now = Date.now();
+        localStorage.setItem(`last_interview_time_${category}${userSuffix}`, now.toString());
+        localStorage.setItem(`last_interview_time_${category}`, now.toString());
+
+        // Add history questions to answered questions pool
+        let answeredIds = [];
+        try {
+          answeredIds = JSON.parse(
+            localStorage.getItem(`answered_interview_question_ids${userSuffix}`) ||
+            localStorage.getItem('answered_interview_question_ids') ||
+            '[]'
+          );
+        } catch(e) {}
+        
+        const currentIds = [...history.map(h => h.question.id), activeQuestion.id];
+        const newAnsweredIds = Array.from(new Set([...answeredIds, ...currentIds]));
+        localStorage.setItem(`answered_interview_question_ids${userSuffix}`, JSON.stringify(newAnsweredIds));
+        localStorage.setItem('answered_interview_question_ids', JSON.stringify(newAnsweredIds));
       }, 500);
     } else {
-      getNextQuestion(performance);
+      // Gather all previously asked question IDs in this session, including the current active question
+      const currentAskedIds = [...history.map(h => h.question.id), activeQuestion.id];
+      getNextQuestion(performance, currentAskedIds);
     }
   };
 
@@ -195,28 +299,68 @@ export default function AIInterview() {
           <div className="setup-category-row">
             <h3>Choose your interview track:</h3>
             <div className="categories-card-grid">
-              <button className="category-setup-card glass-card" onClick={() => startInterviewLoop("Java")}>
+              <button 
+                className={`category-setup-card glass-card ${cooldowns.Java > 0 ? 'card-locked' : ''}`} 
+                onClick={() => cooldowns.Java === 0 && startInterviewLoop("Java")}
+                disabled={cooldowns.Java > 0}
+              >
                 <BookOpen size={24} className="cat-icon text-purple" />
                 <h4>Java Core</h4>
                 <p>Heap vs Stack, Immutability, Collections working parameters, multithreading.</p>
+                {cooldowns.Java > 0 && (
+                  <div className="card-cooldown-overlay">
+                    <Clock size={16} />
+                    <span>Next in {formatCooldownTime(cooldowns.Java)}</span>
+                  </div>
+                )}
               </button>
 
-              <button className="category-setup-card glass-card" onClick={() => startInterviewLoop("DSA")}>
+              <button 
+                className={`category-setup-card glass-card ${cooldowns.DSA > 0 ? 'card-locked' : ''}`} 
+                onClick={() => cooldowns.DSA === 0 && startInterviewLoop("DSA")}
+                disabled={cooldowns.DSA > 0}
+              >
                 <Cpu size={24} className="cat-icon text-green" />
                 <h4>Data Structures</h4>
                 <p>Complexity analysis, search mechanics, dynamic comparisons, recurrences.</p>
+                {cooldowns.DSA > 0 && (
+                  <div className="card-cooldown-overlay">
+                    <Clock size={16} />
+                    <span>Next in {formatCooldownTime(cooldowns.DSA)}</span>
+                  </div>
+                )}
               </button>
 
-              <button className="category-setup-card glass-card" onClick={() => startInterviewLoop("HR")}>
+              <button 
+                className={`category-setup-card glass-card ${cooldowns.HR > 0 ? 'card-locked' : ''}`} 
+                onClick={() => cooldowns.HR === 0 && startInterviewLoop("HR")}
+                disabled={cooldowns.HR > 0}
+              >
                 <UserCheck size={24} className="cat-icon text-pink" />
                 <h4>HR & Behavior</h4>
                 <p>STAR behavioral methods, conflict resolution, past experience reviews.</p>
+                {cooldowns.HR > 0 && (
+                  <div className="card-cooldown-overlay">
+                    <Clock size={16} />
+                    <span>Next in {formatCooldownTime(cooldowns.HR)}</span>
+                  </div>
+                )}
               </button>
 
-              <button className="category-setup-card glass-card active-adaptive" onClick={() => startInterviewLoop("Adaptive")}>
+              <button 
+                className={`category-setup-card glass-card active-adaptive ${cooldowns.Adaptive > 0 ? 'card-locked' : ''}`} 
+                onClick={() => cooldowns.Adaptive === 0 && startInterviewLoop("Adaptive")}
+                disabled={cooldowns.Adaptive > 0}
+              >
                 <Sparkles size={24} className="cat-icon text-gold" />
                 <h4>AI Adaptive</h4>
                 <p>Fully progressive flow combining Java + DSA questions shifting from Easy to Hard.</p>
+                {cooldowns.Adaptive > 0 && (
+                  <div className="card-cooldown-overlay">
+                    <Clock size={16} />
+                    <span>Next in {formatCooldownTime(cooldowns.Adaptive)}</span>
+                  </div>
+                )}
               </button>
             </div>
           </div>
@@ -267,6 +411,22 @@ export default function AIInterview() {
                   <div className="review-card-header">
                     <span className="review-num">Q{idx + 1}</span>
                     <span className={`badge badge-${h.question.difficulty.toLowerCase()}`}>{h.question.difficulty}</span>
+                    {h.question.company && (
+                      <span style={{ 
+                        fontSize: '0.72rem', 
+                        fontWeight: 800, 
+                        color: 'hsl(var(--primary))',
+                        border: '1px solid hsl(var(--primary) / 0.3)',
+                        background: 'hsl(var(--primary) / 0.08)',
+                        padding: '0.1rem 0.4rem', 
+                        borderRadius: '4px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.02em',
+                        marginLeft: '0.25rem'
+                      }}>
+                        {h.question.company}
+                      </span>
+                    )}
                     <span className="review-time"><Clock size={12} /> {formatTime(h.time)}</span>
                     <span className={`rating-pill ${h.rating === 'nailed' ? 'pill-green' : 'pill-yellow'}`}>
                       {h.rating === 'nailed' ? 'Nailed It' : 'Need Practice'}
@@ -300,6 +460,17 @@ export default function AIInterview() {
                 <Clock size={16} className="timer-icon" />
                 <span>{formatTime(seconds)}</span>
               </div>
+              <button 
+                onClick={() => {
+                  setInterviewStarted(false);
+                  setInterviewFinished(false);
+                  setIsTimerRunning(false);
+                }} 
+                className="exit-interview-btn" 
+                title="Exit Interview"
+              >
+                <X size={18} />
+              </button>
             </div>
           </div>
 
@@ -307,7 +478,23 @@ export default function AIInterview() {
           <div className="question-prompt-card glass-card">
             <div className="robot-avatar">🤖</div>
             <div className="question-content">
-              <h3>Interviewer prompt:</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <h3 style={{ margin: 0 }}>Interviewer prompt:</h3>
+                {activeQuestion?.company && (
+                  <span style={{ 
+                    fontSize: '0.72rem', 
+                    fontWeight: 800, 
+                    color: '#fff', 
+                    background: 'linear-gradient(135deg, hsl(var(--primary)), #7c3aed)',
+                    padding: '0.2rem 0.5rem', 
+                    borderRadius: '4px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>
+                    Asked at {activeQuestion.company}
+                  </span>
+                )}
+              </div>
               <p className="typed-question-box">
                 {activeQuestion && (
                   <TypingAnimation 
@@ -868,6 +1055,57 @@ export default function AIInterview() {
         @keyframes evalFade {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+
+        .exit-interview-btn {
+          background: transparent;
+          border: none;
+          color: hsl(var(--muted-foreground));
+          cursor: pointer;
+          padding: 0.4rem;
+          border-radius: 0.35rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: var(--transition);
+        }
+
+        .exit-interview-btn:hover {
+          color: #ef4444;
+          background: rgba(239, 68, 68, 0.15);
+        }
+
+        /* Category Card Cooldown Styles */
+        .category-setup-card {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .category-setup-card.card-locked {
+          opacity: 0.85;
+          cursor: not-allowed;
+          border-color: rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .card-cooldown-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(15, 15, 25, 0.9);
+          backdrop-filter: blur(3px);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          color: #ef4444;
+          font-weight: 700;
+          font-size: 0.9rem;
+          z-index: 10;
+        }
+
+        .card-cooldown-overlay span {
+          font-family: var(--font-mono);
+          letter-spacing: 0.02em;
         }
 
         @media (max-width: 600px) {

@@ -63,55 +63,23 @@ export function generate75DaySchedule(codingQuestions) {
   PHASES.forEach(phase => {
     const phaseTrack = phase.track;
     const phaseQs = codingQuestions.filter(q => q.track === phaseTrack);
-    
-    // Sort topics of this track by weight descending
-    const trackTopics = Object.values(weights)
-      .filter(w => w.track === phaseTrack)
-      .sort((a, b) => b.weightScore - a.weightScore);
-
     const totalDaysInPhase = phase.endDay - phase.startDay + 1;
 
     for (let d = 0; d < totalDaysInPhase; d++) {
       const currentDayNumber = phase.startDay + d;
       
-      // Determine primary topic by distributing weighted topics
-      let primaryTopicInfo = trackTopics[0];
-      if (trackTopics.length > 0) {
-        const totalWeightScore = trackTopics.reduce((sum, t) => sum + t.weightScore, 0);
-        let accumulatedWeight = 0;
-        const targetWeightPoint = (d / totalDaysInPhase) * totalWeightScore;
-
-        for (let t = 0; t < trackTopics.length; t++) {
-          accumulatedWeight += trackTopics[t].weightScore;
-          if (accumulatedWeight >= targetWeightPoint) {
-            primaryTopicInfo = trackTopics[t];
-            break;
-          }
-        }
-      }
-
-      const primaryTopic = primaryTopicInfo ? primaryTopicInfo.topic : 'General Coding';
-
-      // Select exactly three coding questions for today
+      // Select exactly three non-repeating coding questions for today
       const selectedQuestions = [];
-      const topicQs = phaseQs.filter(q => q.topic === primaryTopic);
-      const pool = topicQs.length > 0 ? topicQs : phaseQs;
-
       for (let qIdx = 0; qIdx < 3; qIdx++) {
-        let questionItem = null;
-        if (pool.length > 0) {
-          const idx = (d * 3 + qIdx) % pool.length;
-          questionItem = pool[idx];
-        } else {
-          const fallbackPool = phaseQs.length > 0 ? phaseQs : codingQuestions;
-          questionItem = fallbackPool[(d * 3 + qIdx) % fallbackPool.length];
-        }
+        const qIndex = (d * 3 + qIdx) % phaseQs.length;
+        const questionItem = phaseQs[qIndex];
         selectedQuestions.push({
           ...questionItem,
           local_id: `${questionItem.id}_day_${currentDayNumber}_q_${qIdx}`
         });
       }
 
+      const primaryTopic = selectedQuestions[0] ? selectedQuestions[0].topic : 'General Coding';
       const title = `Day ${currentDayNumber}: ${primaryTopic} Challenge`;
 
       schedule.push({

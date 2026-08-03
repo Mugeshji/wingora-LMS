@@ -16,8 +16,10 @@ export default function TypingAnimation({ text = "", speed = 30, onComplete }) {
     }
 
     let index = 0;
+    let accumulated = "";
     const timer = setInterval(() => {
-      setDisplayedText((prev) => prev + text.charAt(index));
+      accumulated += text.charAt(index);
+      setDisplayedText(accumulated);
       index++;
       
       if (index >= text.length) {

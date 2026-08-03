@@ -25,7 +25,21 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [theme, setTheme] = useState(() => localStorage.getItem('wingora_theme') || 'dark');
-  const [bookmarks, setBookmarks] = useState(() => JSON.parse(localStorage.getItem('wingora_bookmarks') || '[]'));
+  
+  const userSuffix = activeUser?.userID ? `_${activeUser.userID}` : '';
+
+  const [bookmarks, setBookmarks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('wingora_active_user');
+      const parsed = saved ? JSON.parse(saved) : null;
+      const suffix = parsed?.userID ? `_${parsed.userID}` : '';
+      const savedBms = localStorage.getItem(`wingora_bookmarks${suffix}`) ||
+                       localStorage.getItem('wingora_bookmarks');
+      return savedBms ? JSON.parse(savedBms) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   
   // Navigation payload for jumping from global search to specific questions
   const [navigationPayload, setNavigationPayload] = useState(null);
@@ -34,6 +48,19 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('wingora_theme', theme);
   }, [theme]);
+
+  // Sync bookmarks state when bookmarks change
+  useEffect(() => {
+    localStorage.setItem(`wingora_bookmarks${userSuffix}`, JSON.stringify(bookmarks));
+    localStorage.setItem('wingora_bookmarks', JSON.stringify(bookmarks));
+  }, [bookmarks, userSuffix]);
+
+  // Sync bookmarks from storage when activeUser changes
+  useEffect(() => {
+    const savedBms = localStorage.getItem(`wingora_bookmarks${userSuffix}`) ||
+                     localStorage.getItem('wingora_bookmarks');
+    setBookmarks(savedBms ? JSON.parse(savedBms) : []);
+  }, [activeUser, userSuffix]);
 
   // Sync students list with localStorage
   const handleAddStudent = (student) => {

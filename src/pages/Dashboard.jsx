@@ -33,6 +33,28 @@ export default function Dashboard({ setActiveTab, setNavigationPayload, bookmark
 
   // Fetch active user
   const activeUser = JSON.parse(localStorage.getItem('wingora_active_user') || 'null');
+  const userSuffix = activeUser?.userID ? `_${activeUser.userID}` : '';
+
+  const getSyncItem = (key, fallbackDefault = '[]') => {
+    try {
+      const saved = localStorage.getItem(`${key}${userSuffix}`) ||
+                    localStorage.getItem(key);
+      return saved || fallbackDefault;
+    } catch (e) {
+      return fallbackDefault;
+    }
+  };
+
+  const getSyncInt = (key, fallbackDefault = 0) => {
+    try {
+      const saved = localStorage.getItem(`${key}${userSuffix}`) ||
+                    localStorage.getItem(key);
+      return saved ? parseInt(saved, 10) : fallbackDefault;
+    } catch (e) {
+      return fallbackDefault;
+    }
+  };
+
   const getDisplayName = (id) => {
     if (!id) return 'Engineer';
     if (id.toUpperCase() === 'TC0001') return 'Nithya';
@@ -47,40 +69,40 @@ export default function Dashboard({ setActiveTab, setNavigationPayload, bookmark
   };
   const username = activeUser ? getDisplayName(activeUser.userID) : 'Engineer';
 
-  // Fetch metrics from localStorage
-  const completedJava = JSON.parse(localStorage.getItem('completed_java') || '[]');
-  const completedOops = JSON.parse(localStorage.getItem('completed_oops') || '[]');
-  const completedDsa = JSON.parse(localStorage.getItem('completed_dsa') || '[]');
-  const completedInterviews = parseInt(localStorage.getItem('completed_interviews') || '0', 10);
-  const recentlyViewed = JSON.parse(localStorage.getItem('recently_viewed') || '[]');
+  // Fetch metrics from localStorage/sessionStorage
+  const completedJava = JSON.parse(getSyncItem('completed_java', '[]'));
+  const completedOops = JSON.parse(getSyncItem('completed_oops', '[]'));
+  const completedDsa = JSON.parse(getSyncItem('completed_dsa', '[]'));
+  const completedInterviews = getSyncInt('completed_interviews', 0);
+  const recentlyViewed = JSON.parse(getSyncItem('recently_viewed', '[]'));
 
-  // Fetch MCQ Quiz stats from localStorage
-  const javaHighScore = parseInt(localStorage.getItem('wingora_quiz_highscore_java') || '0', 10);
-  const htmlHighScore = parseInt(localStorage.getItem('wingora_quiz_highscore_html') || '0', 10);
-  const cssHighScore = parseInt(localStorage.getItem('wingora_quiz_highscore_css') || '0', 10);
-  const jsHighScore = parseInt(localStorage.getItem('wingora_quiz_highscore_js') || '0', 10);
-  const jdbcHighScore = parseInt(localStorage.getItem('wingora_quiz_highscore_jdbc') || '0', 10);
+  // Fetch MCQ Quiz stats from localStorage/sessionStorage
+  const javaHighScore = getSyncInt('wingora_quiz_highscore_java', 0);
+  const htmlHighScore = getSyncInt('wingora_quiz_highscore_html', 0);
+  const cssHighScore = getSyncInt('wingora_quiz_highscore_css', 0);
+  const jsHighScore = getSyncInt('wingora_quiz_highscore_js', 0);
+  const jdbcHighScore = getSyncInt('wingora_quiz_highscore_jdbc', 0);
   
   const totalCompletedQuizzes = 
-    parseInt(localStorage.getItem('wingora_quiz_completed_java') || '0', 10) +
-    parseInt(localStorage.getItem('wingora_quiz_completed_html') || '0', 10) +
-    parseInt(localStorage.getItem('wingora_quiz_completed_css') || '0', 10) +
-    parseInt(localStorage.getItem('wingora_quiz_completed_js') || '0', 10) +
-    parseInt(localStorage.getItem('wingora_quiz_completed_jdbc') || '0', 10);
+    getSyncInt('wingora_quiz_completed_java', 0) +
+    getSyncInt('wingora_quiz_completed_html', 0) +
+    getSyncInt('wingora_quiz_completed_css', 0) +
+    getSyncInt('wingora_quiz_completed_js', 0) +
+    getSyncInt('wingora_quiz_completed_jdbc', 0);
 
   const bestScore = Math.max(javaHighScore, htmlHighScore, cssHighScore, jsHighScore, jdbcHighScore);
 
   // TCS Coding Stats
-  const tcsCodingProgressRaw = JSON.parse(localStorage.getItem('wingora_tcs_progress_coding') || '{}');
+  const tcsCodingProgressRaw = JSON.parse(getSyncItem('wingora_tcs_progress_coding', '{}'));
   const tcsCodingCompletedDays = Object.values(tcsCodingProgressRaw).filter(day => day.status === 'completed').length;
   const tcsCodingProgress = Math.round((tcsCodingCompletedDays / 75) * 100);
 
-  const tcsCodingMetaRaw = JSON.parse(localStorage.getItem('wingora_tcs_user_meta_coding') || '{}');
+  const tcsCodingMetaRaw = JSON.parse(getSyncItem('wingora_tcs_user_meta_coding', '{}'));
   const codingStreak = tcsCodingMetaRaw.streak_count || 0;
   const codingBestStreak = tcsCodingMetaRaw.best_streak || 0;
 
   // TCS Aptitude Stats
-  const tcsAptitudeProgressRaw = JSON.parse(localStorage.getItem('wingora_tcs_aptitude_progress') || '{}');
+  const tcsAptitudeProgressRaw = JSON.parse(getSyncItem('wingora_tcs_aptitude_progress', '{}'));
   let tcsAptitudeCompletedSheets = 0;
   Object.keys(tcsAptitudeProgressRaw).forEach(cat => {
     const catProg = tcsAptitudeProgressRaw[cat] || {};
@@ -176,6 +198,7 @@ export default function Dashboard({ setActiveTab, setNavigationPayload, bookmark
     e.stopPropagation();
     const updated = bookmarks.filter(id => id !== dsaId);
     setBookmarks(updated);
+    localStorage.setItem(`wingora_bookmarks${userSuffix}`, JSON.stringify(updated));
     localStorage.setItem('wingora_bookmarks', JSON.stringify(updated));
   };
 
@@ -190,7 +213,6 @@ export default function Dashboard({ setActiveTab, setNavigationPayload, bookmark
           <div style={{display:'flex', flexDirection:'column', gap:'0.5rem'}}>
             <div style={{display:'flex', alignItems:'center', gap:'0.65rem', flexWrap:'wrap'}}>
               <span className="badge-premium-rank">
-                <Zap size={11} className="badge-zap-icon" />
                 {levelTitle}
               </span>
               <span style={{fontSize:'0.72rem', color:'hsl(var(--muted-foreground))', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em'}}>
@@ -199,7 +221,7 @@ export default function Dashboard({ setActiveTab, setNavigationPayload, bookmark
             </div>
             
             <h1 className="hero-welcome-title">
-              Welcome back, {username}! ⚡
+              Welcome back, {username}!
             </h1>
             
             <p style={{color:'hsl(var(--muted-foreground))', fontSize:'0.92rem', maxWidth:'620px', lineHeight:1.6}}>
@@ -666,7 +688,10 @@ export default function Dashboard({ setActiveTab, setNavigationPayload, bookmark
         }
 
         [data-theme='light'] .hero-welcome-title {
-          background: linear-gradient(135deg, #1e1b4b 0%, #6d28d9 50%, #7c3aed 100%);
+          background: none !important;
+          -webkit-background-clip: unset !important;
+          -webkit-text-fill-color: #1e1b4b !important;
+          color: #1e1b4b !important;
         }
 
         .quick-stats-strip {

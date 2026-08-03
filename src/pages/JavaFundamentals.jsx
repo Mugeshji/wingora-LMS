@@ -4,6 +4,17 @@ import { javaBasics } from '../data/javaBasics';
 import CodeEditor from '../components/CodeEditor';
 
 export default function JavaFundamentals({ navigationPayload, setNavigationPayload }) {
+  const activeUser = React.useMemo(() => {
+    try {
+      const saved = localStorage.getItem('wingora_active_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  }, []);
+
+  const userSuffix = activeUser?.userID ? `_${activeUser.userID}` : '';
+
   const [selectedCatId, setSelectedCatId] = useState(javaBasics[0].id);
   const [expandedProbId, setExpandedProbId] = useState(null);
   const [showSolutionId, setShowSolutionId] = useState(null);
@@ -18,9 +29,13 @@ export default function JavaFundamentals({ navigationPayload, setNavigationPaylo
 
   // Load completions from localStorage
   useEffect(() => {
-    const list = JSON.parse(localStorage.getItem('completed_java') || '[]');
+    const list = JSON.parse(
+      localStorage.getItem(`completed_java${userSuffix}`) ||
+      localStorage.getItem('completed_java') ||
+      '[]'
+    );
     setCompletedList(list);
-  }, []);
+  }, [userSuffix]);
 
   // Handle payload from global search
   useEffect(() => {
@@ -45,14 +60,19 @@ export default function JavaFundamentals({ navigationPayload, setNavigationPaylo
   // Save to recently viewed when category changes
   useEffect(() => {
     if (!selectedCategory) return;
-    const recent = JSON.parse(localStorage.getItem('recently_viewed') || '[]');
+    const recent = JSON.parse(
+      localStorage.getItem(`recently_viewed${userSuffix}`) ||
+      localStorage.getItem('recently_viewed') ||
+      '[]'
+    );
     const filtered = recent.filter(item => !(item.type === 'java' && item.target === selectedCategory.id));
     const updated = [
       { type: 'java', name: `Java: ${selectedCategory.title}`, target: selectedCategory.id },
       ...filtered
     ].slice(0, 5);
+    localStorage.setItem(`recently_viewed${userSuffix}`, JSON.stringify(updated));
     localStorage.setItem('recently_viewed', JSON.stringify(updated));
-  }, [selectedCatId]);
+  }, [selectedCatId, userSuffix]);
 
   // Load starter templates into code state when category changes
   useEffect(() => {
@@ -74,6 +94,7 @@ export default function JavaFundamentals({ navigationPayload, setNavigationPaylo
       updated = [...completedList, probId];
     }
     setCompletedList(updated);
+    localStorage.setItem(`completed_java${userSuffix}`, JSON.stringify(updated));
     localStorage.setItem('completed_java', JSON.stringify(updated));
   };
 
@@ -183,6 +204,7 @@ export default function JavaFundamentals({ navigationPayload, setNavigationPaylo
       if (!completedList.includes(probId)) {
         const updated = [...completedList, probId];
         setCompletedList(updated);
+        localStorage.setItem(`completed_java${userSuffix}`, JSON.stringify(updated));
         localStorage.setItem('completed_java', JSON.stringify(updated));
       }
     }, 950);

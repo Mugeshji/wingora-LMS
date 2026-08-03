@@ -48,7 +48,6 @@ export default function TcsChallenge({ activeUser }) {
   });
 
   // Config States
-  const [unlockRule, setUnlockRule] = useState('next_day'); // 'immediate' or 'next_day' (10-hour cooldown)
   const [streakResetRule, setStreakResetRule] = useState(true);
   const [streakNotice, setStreakNotice] = useState('');
 
@@ -67,11 +66,11 @@ export default function TcsChallenge({ activeUser }) {
   // Dashboard Sub-tabs, Search & Filters, Confirmation Modal
   const [currentSubTab, setCurrentSubTab] = useState('all'); // 'all', 'ninja', 'digital', 'prime'
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'completed', 'unlocked', 'cooldown', 'locked'
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'completed', 'unlocked', 'locked'
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
 
-  // Real-time Clock for dynamic 10-hour cooldown checks
+  // Real-time Clock
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
@@ -84,40 +83,22 @@ export default function TcsChallenge({ activeUser }) {
   // Helper function to dynamically check lock/unlock/cooldown status of a day
   const getDayStatus = (dayNum) => {
     const currentProg = progress[dayNum];
-    if (!currentProg) return { status: 'locked' };
-
-    if (currentProg.status === 'completed') {
+    if (currentProg && currentProg.status === 'completed') {
       return { status: 'completed', completedAt: currentProg.completed_at };
     }
 
-    if (dayNum === 1) {
-      return { status: 'unlocked' };
-    }
-
-    // Check if the previous day is completed
-    const prevProg = progress[dayNum - 1];
-    if (!prevProg || prevProg.status !== 'completed') {
-      return { status: 'locked' };
-    }
-
-    // Previous day is completed! Check cooldown
-    if (prevProg.completed_at && unlockRule === 'next_day') {
-      const completedTime = new Date(prevProg.completed_at).getTime();
-      const COOLDOWN_DURATION = 10 * 60 * 60 * 1000; // 10 hours
-      const elapsedTime = currentTime - completedTime;
-
-      if (elapsedTime < COOLDOWN_DURATION) {
-        const remainingTime = COOLDOWN_DURATION - elapsedTime;
-        return { 
-          status: 'cooldown', 
-          remainingTime,
-          unlocksAt: completedTime + COOLDOWN_DURATION
-        };
+    // Enforce sequential unlocking
+    if (dayNum > 1) {
+      const prevProg = progress[dayNum - 1];
+      if (!prevProg || prevProg.status !== 'completed') {
+        return { status: 'locked' };
       }
     }
 
     return { status: 'unlocked' };
   };
+
+
 
   const formatCooldown = (ms) => {
     const totalSecs = Math.floor(ms / 1000);
@@ -291,7 +272,7 @@ export default function TcsChallenge({ activeUser }) {
     if (savedQuestions) {
       try {
         const parsed = JSON.parse(savedQuestions);
-        if (parsed.length === 0 || !parsed[0].starter_code) {
+        if (parsed.length === 0 || !parsed[0].starter_code || !parsed[0].solution || parsed.length !== 225) {
           forceReloadQBank = true;
         }
       } catch (e) {
@@ -317,7 +298,7 @@ export default function TcsChallenge({ activeUser }) {
     if (savedSchedule) {
       try {
         scheduleList = JSON.parse(savedSchedule);
-        if (scheduleList.length === 0 || !scheduleList[0].questions || !scheduleList[0].questions[0].starter_code) {
+        if (scheduleList.length === 0 || !scheduleList[0].questions || !scheduleList[0].questions[0].starter_code || !scheduleList[0].questions[0].solution) {
           needRegen = true;
         }
       } catch (e) {
@@ -349,7 +330,7 @@ export default function TcsChallenge({ activeUser }) {
         progressMap[i] = {
           day_number: i,
           track: i <= 30 ? 'ninja' : i <= 60 ? 'digital' : 'prime',
-          status: i === 1 ? 'unlocked' : 'locked',
+          status: 'unlocked',
           completed_at: null,
           user_codes: null
         };
@@ -400,7 +381,7 @@ export default function TcsChallenge({ activeUser }) {
       initialProgress[i] = {
         day_number: i,
         track: i <= 30 ? 'ninja' : i <= 60 ? 'digital' : 'prime',
-        status: i === 1 ? 'unlocked' : 'locked',
+        status: 'unlocked',
         completed_at: null,
         user_codes: null
       };
@@ -647,14 +628,13 @@ export default function TcsChallenge({ activeUser }) {
     const nextDay = dayObj.day_number + 1;
     let newUnlockedDay = userMeta.current_unlocked_day;
     if (nextDay <= 75) {
-      if (unlockRule === 'immediate') {
-        updatedProgress[nextDay] = {
-          ...updatedProgress[nextDay],
-          status: 'unlocked'
-        };
-        newUnlockedDay = Math.max(newUnlockedDay, nextDay);
-      }
+      updatedProgress[nextDay] = {
+        ...updatedProgress[nextDay],
+        status: 'unlocked'
+      };
+      newUnlockedDay = Math.max(newUnlockedDay, nextDay);
     }
+
 
     setProgress(updatedProgress);
     localStorage.setItem('wingora_tcs_progress_coding', JSON.stringify(updatedProgress));
@@ -796,6 +776,50 @@ export default function TcsChallenge({ activeUser }) {
                   }}
                 >
                   Reset Everything
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Back Confirm Modal */}
+      <AnimatePresence>
+        {showBackConfirm && (
+          <div className="custom-modal-overlay">
+            <div className="custom-modal-card glass-panel p-6 max-w-sm w-full mx-4">
+              <div className="modal-header flex items-center gap-3 mb-3 pb-3 border-b border-[hsl(var(--card-border)/0.3)]">
+                <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-500">
+                  <AlertTriangle size={24} className="animate-pulse" />
+                </div>
+                <h3 className="text-lg font-bold text-foreground">Exit Coding Workspace?</h3>
+              </div>
+              <div className="modal-body my-4 text-xs leading-relaxed text-muted-foreground">
+                <p className="mb-2">Are you sure you want to leave the active coding workspace?</p>
+                <p className="text-yellow-500/90 font-medium">Any unsaved code modifications or current progress for this day's challenge will be lost.</p>
+              </div>
+              <div className="modal-footer flex justify-end gap-3 pt-4 border-t border-[hsl(var(--card-border)/0.3)]">
+                <button 
+                  type="button" 
+                  className="btn-secondary py-1.5 px-4 text-xs font-semibold rounded-lg" 
+                  onClick={() => setShowBackConfirm(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn-primary bg-yellow-600 hover:bg-yellow-700 text-white py-1.5 px-4 text-xs font-bold rounded-lg border-none" 
+                  onClick={() => {
+                    if (timerRef.current) {
+                      clearInterval(timerRef.current);
+                      timerRef.current = null;
+                    }
+                    setCurrentScreen('dashboard');
+                    setCurrentDayTest(null);
+                    setShowBackConfirm(false);
+                  }}
+                >
+                  Yes, Exit
                 </button>
               </div>
             </div>
@@ -947,32 +971,6 @@ export default function TcsChallenge({ activeUser }) {
                         <span>Launch Workspace</span>
                       </button>
                     )}
-                    {nextActive.statusInfo.status === 'cooldown' && (
-                      <div style={{padding:'1rem', borderRadius:'12px', background:'rgba(245,158,11,0.06)', border:'1px solid rgba(245,158,11,0.2)', textAlign:'center'}}>
-                        <span style={{fontSize:'0.65rem', color:'hsl(var(--muted-foreground))', display:'block', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'0.35rem'}}>Unlocks in</span>
-                        <span style={{fontSize:'1.1rem', fontFamily:'monospace', fontWeight:800, color:'#fbbf24', display:'block'}}>
-                          {formatCooldown(nextActive.statusInfo.remainingTime)}
-                        </span>
-                        {activeUser?.role === 'admin' && (
-                          <button 
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const updatedProgress = { ...progress };
-                              const prevDay = nextActive.dayData.day_number - 1;
-                              if (updatedProgress[prevDay]) {
-                                updatedProgress[prevDay].completed_at = new Date(Date.now() - 10.5 * 60 * 60 * 1000).toISOString();
-                                setProgress(updatedProgress);
-                                localStorage.setItem('wingora_tcs_progress_coding', JSON.stringify(updatedProgress));
-                              }
-                            }}
-                            style={{fontSize:'0.7rem', color:'hsl(var(--primary))', textDecoration:'underline', marginTop:'0.5rem', background:'none', border:'none', cursor:'pointer'}}
-                          >
-                            Bypass Cooldown
-                          </button>
-                        )}
-                      </div>
-                    )}
                     {nextActive.statusInfo.status === 'locked' && (
                       <div style={{padding:'1rem', borderRadius:'12px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', textAlign:'center', color:'hsl(var(--muted-foreground))', fontSize:'0.85rem', fontWeight:600}}>
                         <Lock size={18} style={{margin:'0 auto 0.5rem', opacity:0.5}} />
@@ -1010,7 +1008,7 @@ export default function TcsChallenge({ activeUser }) {
                 <div style={{display:'flex', alignItems:'center', gap:'0.75rem', flexWrap:'wrap'}}>
                   <span style={{fontSize:'0.7rem', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', whiteSpace:'nowrap'}}>Filter:</span>
                   <div style={{display:'flex', gap:'0.4rem', flexWrap:'wrap'}}>
-                    {['all', 'completed', 'unlocked', 'cooldown', 'locked'].map((status) => (
+                    {['all', 'completed', 'unlocked', 'locked'].map((status) => (
                       <button
                         key={status}
                         type="button"
@@ -1054,13 +1052,11 @@ export default function TcsChallenge({ activeUser }) {
                     const dayStatus = getDayStatus(day.day_number);
                     const isCompleted = dayStatus.status === 'completed';
                     const isUnlocked = dayStatus.status === 'unlocked';
-                    const isCooldown = dayStatus.status === 'cooldown';
                     const isLocked = dayStatus.status === 'locked';
 
                     let cardClass = 'day-card-modern locked-card-modern';
                     if (isCompleted) cardClass = 'day-card-modern completed-card-modern';
                     if (isUnlocked) cardClass = 'day-card-modern active-card-modern';
-                    if (isCooldown) cardClass = 'day-card-modern cooldown-card-modern';
 
                     return (
                       <div 
@@ -1079,7 +1075,6 @@ export default function TcsChallenge({ activeUser }) {
                           <div className="status-indicator">
                             {isCompleted && <CheckCircle2 size={16} className="text-green" />}
                             {isLocked && <Lock size={13} className="text-muted-foreground/60" />}
-                            {isCooldown && <Timer size={14} className="text-yellow animate-pulse" />}
                             {isUnlocked && <Play size={13} className="text-primary animate-pulse" />}
                           </div>
                         </div>
@@ -1107,29 +1102,6 @@ export default function TcsChallenge({ activeUser }) {
                               <span className="text-[10px] text-green font-mono font-bold">
                                 Completed ✓
                               </span>
-                            )}
-                            {isCooldown && (
-                              <div className="day-card-cooldown w-full">
-                                <span className="text-[9px] text-yellow block">Unlocks in: {formatCooldown(dayStatus.remainingTime)}</span>
-                                {activeUser?.role === 'admin' && (
-                                  <button 
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const updatedProgress = { ...progress };
-                                      const prevDay = day.day_number - 1;
-                                      if (updatedProgress[prevDay]) {
-                                        updatedProgress[prevDay].completed_at = new Date(Date.now() - 10.5 * 60 * 60 * 1000).toISOString();
-                                        setProgress(updatedProgress);
-                                        localStorage.setItem('wingora_tcs_progress_coding', JSON.stringify(updatedProgress));
-                                      }
-                                    }}
-                                    className="text-[8px] text-primary underline mt-0.5 block hover:text-foreground"
-                                  >
-                                    Bypass Cooldown
-                                  </button>
-                                )}
-                              </div>
                             )}
                             {isUnlocked && (
                               <span className="start-badge text-[9px] font-extrabold uppercase tracking-wider text-primary flex items-center gap-0.5">
@@ -1212,24 +1184,6 @@ export default function TcsChallenge({ activeUser }) {
               </div>
 
               <div style={{display:'flex', flexDirection:'column', gap:'1.25rem'}}>
-                {/* Unlock Rule */}
-                <div style={{display:'flex', flexDirection:'column', gap:'0.5rem'}}>
-                  <label style={{fontSize:'0.75rem', color:'hsl(var(--muted-foreground))', fontWeight:600, letterSpacing:'0.03em', textTransform:'uppercase'}}>Unlock Next Day Logic</label>
-                  <select 
-                    value={unlockRule}
-                    onChange={(e) => setUnlockRule(e.target.value)}
-                    style={{
-                      width:'100%', padding:'0.65rem 0.85rem', fontSize:'0.8rem',
-                      background:'rgba(12,12,22,0.8)', color:'#e2e8f0',
-                      border:'1.5px solid rgba(255,255,255,0.08)', borderRadius:'10px',
-                      outline:'none', cursor:'pointer', fontFamily:'var(--font-sans)',
-                      transition:'border-color 0.2s ease'
-                    }}
-                  >
-                    <option value="immediate">Immediate (Quick Unlock)</option>
-                    <option value="next_day">Next Calendar Day (Strict)</option>
-                  </select>
-                </div>
 
                 {/* Streak Toggle */}
                 <div style={{
@@ -1352,23 +1306,25 @@ export default function TcsChallenge({ activeUser }) {
         if (!activeQuestion) return null;
 
         return (
-          <div className="test-screen-container max-w-6xl mx-auto space-y-6">
-            <div className="test-header glass-panel p-4 flex justify-between items-center">
-              <button className="btn-secondary flex items-center gap-1.5 text-xs font-bold" onClick={() => setShowBackConfirm(true)}>
-                <ArrowLeft size={14} />
+          <div className="test-screen-container workspace-root">
+            {/* ─── Top Bar ─── */}
+            <div className="workspace-topbar glass-panel">
+              <button className="btn-secondary flex items-center gap-2 text-xs font-bold" onClick={() => setShowBackConfirm(true)}>
+                <ArrowLeft size={15} />
                 <span>Exit Workspace</span>
               </button>
 
-              <h2 className="text-sm font-bold text-foreground">{currentDayTest.title}</h2>
+              <h2 className="workspace-day-title">{currentDayTest.title}</h2>
 
-              <div className="timer-wrapper flex items-center gap-2 px-3 py-1.5 rounded bg-primary/10 border border-primary/20">
-                <Timer size={14} className={timeLeft < 60 ? 'text-red animate-pulse' : 'text-primary'} />
-                <span className={`font-mono font-extrabold text-xs ${timeLeft < 60 ? 'text-red' : 'text-primary'}`}>
+              <div className="workspace-timer-chip">
+                <Timer size={15} className={timeLeft < 60 ? 'text-red animate-pulse' : 'text-primary'} />
+                <span className={`font-mono font-extrabold text-sm ${timeLeft < 60 ? 'text-red' : 'text-primary'}`}>
                   {formatTime(timeLeft)}
                 </span>
               </div>
             </div>
 
+            {/* ─── Problem Tabs ─── */}
             <div className="problem-navbar">
               {currentDayTest.questions.map((q, idx) => {
                 const isActive = activeQuestionIndex === idx;
@@ -1382,7 +1338,7 @@ export default function TcsChallenge({ activeUser }) {
                   >
                     <span>
                       Problem {idx + 1}: {q.topic} ({q.difficulty})
-                      {score !== undefined ? ` - ${score}%` : ''}
+                      {score !== undefined ? ` — ${score}%` : ''}
                     </span>
                     {isActive && <span className="problem-nav-indicator" />}
                   </button>
@@ -1390,45 +1346,53 @@ export default function TcsChallenge({ activeUser }) {
               })}
             </div>
 
-            <div className="workspace-split-layout grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="problem-descr-panel glass-panel p-6 flex flex-col justify-between min-h-[560px]">
-                <div>
-                  <div className="flex justify-between items-center mb-4">
+            {/* ─── Main IDE Split ─── */}
+            <div className="workspace-ide-grid">
+              {/* LEFT — Problem Description */}
+              <div className="problem-descr-panel glass-panel">
+                <div className="problem-scroll-area">
+                  {/* Difficulty + Topic meta strip */}
+                  <div className="problem-meta-strip">
                     <span className="badge badge-medium">{activeQuestion.difficulty}</span>
-                    <span className="text-[10px] text-muted-foreground font-mono">Topic: {activeQuestion.topic}</span>
+                    <span className="problem-topic-label">Topic: {activeQuestion.topic}</span>
                   </div>
 
-                  <h3 className="text-lg font-extrabold text-foreground mb-4">Problem {activeQuestionIndex + 1}: {activeQuestion.topic}</h3>
+                  {/* Problem Title */}
+                  <h3 className="problem-title">
+                    Problem {activeQuestionIndex + 1}: {activeQuestion.topic}
+                  </h3>
                   
-                  <div className="text-xs text-foreground/90 leading-relaxed whitespace-pre-line mb-6 font-semibold">
+                  {/* Problem Body */}
+                  <div className="problem-body-text">
                     {activeQuestion.question}
                   </div>
 
+                  {/* Years Seen Card */}
                   {activeQuestion.years_seen && (
-                    <div className="border-t border-[hsl(var(--card-border)/0.4)] pt-4 mt-6">
-                      <h4 className="text-[10px] font-bold uppercase tracking-wider text-primary mb-2 flex items-center gap-1">
-                        <HelpCircle size={12} />
+                    <div className="years-seen-card">
+                      <h4 className="section-label text-primary">
+                        <HelpCircle size={13} />
                         <span>Recurrent Drive Appearances</span>
                       </h4>
-                      <div className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground mb-3">
                         This code module was flagged in previous TCS selection drives:
-                        <div className="flex gap-1.5 mt-2 flex-wrap">
-                          {activeQuestion.years_seen.map((yr, idx) => (
-                            <span key={idx} className="px-2 py-0.5 rounded bg-secondary text-foreground text-[10px] font-mono">{yr}</span>
-                          ))}
-                        </div>
+                      </p>
+                      <div className="years-badge-row">
+                        {activeQuestion.years_seen.map((yr, idx) => (
+                          <span key={idx} className="year-badge">{yr}</span>
+                        ))}
                       </div>
                     </div>
                   )}
 
-                  {/* AI Hint / Solution Drawer */}
-                  <div className="assistant-controls-section border-t border-[hsl(var(--card-border)/0.4)] pt-4 mt-6 space-y-3">
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
-                      <Sparkles size={12} className="text-amber-400" />
+                  {/* AI Assistance Card */}
+                  <div className="ai-assistance-card">
+                    <h4 className="section-label text-amber-400">
+                      <Sparkles size={13} className="text-amber-400" />
                       <span>Interactive Learning Assistance</span>
                     </h4>
                     
-                    <div className="flex gap-2">
+                    <div className="ai-btn-row">
                       <button
                         type="button"
                         onClick={() => {
@@ -1437,9 +1401,9 @@ export default function TcsChallenge({ activeUser }) {
                             [activeQuestionIndex]: activeQuestion.hint_body || "Consider dividing the problem into smaller subproblems or checking edge cases like 0 and negative inputs."
                           }));
                         }}
-                        className="btn-secondary flex-1 py-2 text-xs font-semibold justify-center flex items-center gap-1.5 rounded-lg glow-btn-amber"
+                        className="ai-assist-btn glow-btn-amber"
                       >
-                        <Lightbulb size={14} className="text-amber-400" />
+                        <Lightbulb size={15} className="text-amber-400" />
                         <span>Get AI Logic Hint</span>
                       </button>
 
@@ -1457,49 +1421,55 @@ export default function TcsChallenge({ activeUser }) {
                             }));
                           }
                         }}
-                        className="btn-secondary flex-1 py-2 text-xs font-semibold justify-center flex items-center gap-1.5 rounded-lg glow-btn-primary"
+                        className="ai-assist-btn glow-btn-primary"
                       >
-                        <Key size={14} className="text-primary" />
+                        <Key size={15} className="text-primary" />
                         <span>Reveal Solution Code</span>
                       </button>
                     </div>
 
                     {/* Hint Display */}
                     {hintViewed[activeQuestionIndex] && (
-                      <div className="p-3.5 rounded-lg text-xs text-foreground/90 mt-2 leading-relaxed animate-fadeIn glow-panel-amber">
-                        <span className="font-bold text-amber-400 flex items-center gap-1.5 mb-1">
-                          <Lightbulb size={14} className="text-amber-400" />
+                      <div className="hint-display-card glow-panel-amber animate-fadeIn">
+                        <span className="font-bold text-amber-400 flex items-center gap-2 mb-2 text-sm">
+                          <Lightbulb size={15} className="text-amber-400" />
                           <span>Logic &amp; Mistake Rectification Hint:</span>
                         </span>
-                        <div className="whitespace-pre-line">{hintViewed[activeQuestionIndex]}</div>
+                        <div className="whitespace-pre-line text-sm leading-relaxed text-foreground/85">{hintViewed[activeQuestionIndex]}</div>
                       </div>
                     )}
 
                     {/* Solution Display */}
                     {solutionViewed[activeQuestionIndex] && (
-                      <div className="space-y-3 mt-3 animate-fadeIn">
-                        <div className="p-3.5 rounded-lg text-xs text-foreground/90 leading-relaxed glow-panel-primary">
-                          <span className="font-bold text-primary flex items-center gap-1.5 mb-1">
-                            <Key size={14} className="text-primary" />
-                            <span>Reference Solution Copied to Workspace!</span>
-                          </span>
-                          <span className="font-bold text-primary block mt-3 mb-1">Real-Time Insight &amp; Explanation:</span>
-                          <div className="whitespace-pre-line text-muted-foreground">{activeQuestion.explanation || activeQuestion.hint_body}</div>
-                        </div>
+                      <div className="solution-display-card glow-panel-primary animate-fadeIn">
+                        <span className="font-bold text-primary flex items-center gap-2 mb-2 text-sm">
+                          <Key size={15} className="text-primary" />
+                          <span>Reference Solution Copied to Workspace!</span>
+                        </span>
+                        
+                        <span className="font-bold text-primary block mt-3 mb-2 text-xs uppercase tracking-wider">Optimal Reference Code:</span>
+                        <pre className="solution-code-pre">
+                          {activeQuestion.solution}
+                        </pre>
+
+                        <span className="font-bold text-primary block mt-4 mb-2 text-xs uppercase tracking-wider">Real-Time Insight &amp; Explanation:</span>
+                        <div className="whitespace-pre-line text-muted-foreground text-sm leading-relaxed">{activeQuestion.explanation || activeQuestion.hint_body}</div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="alert-notice-box bg-primary/5 border border-primary/10 p-3 rounded-xl text-xs text-primary flex gap-2 items-start mt-6">
-                  <Terminal size={14} className="mt-0.5" />
+                {/* Bottom notice */}
+                <div className="workspace-notice">
+                  <Terminal size={14} className="flex-shrink-0 mt-0.5" />
                   <span>Compile and dry run on sample test cases. Make sure your Solution class outputs correctly.</span>
                 </div>
               </div>
 
-              <div className="coding-panel glass-panel p-0 flex flex-col justify-between min-h-[560px] overflow-hidden">
-                <div className="editor-control-header flex justify-between items-center p-3 border-b border-[hsl(var(--card-border)/0.4)] bg-secondary/30">
-                  <span className="text-xs text-foreground font-mono flex items-center gap-1.5 font-bold">
+              {/* RIGHT — Code Editor + Terminal */}
+              <div className="coding-panel glass-panel">
+                <div className="editor-control-header">
+                  <span className="editor-file-label">
                     <Code size={14} className="text-primary" />
                     Solution.java
                   </span>
@@ -1513,7 +1483,7 @@ export default function TcsChallenge({ activeUser }) {
                           [activeQuestionIndex]: activeQuestion.starter_code || activeQuestion.answer
                         }));
                       }}
-                      className="px-2.5 py-1 text-[10px] font-bold rounded editor-reset-btn"
+                      className="px-3 py-1.5 text-[11px] font-bold rounded-md editor-reset-btn"
                     >
                       Reset Template
                     </button>
@@ -1521,9 +1491,9 @@ export default function TcsChallenge({ activeUser }) {
                       type="button"
                       onClick={runCodeSample}
                       disabled={isEvaluating[activeQuestionIndex]}
-                      className="btn-primary px-2.5 py-1 text-[10px] font-bold flex items-center gap-1"
+                      className="btn-primary px-3 py-1.5 text-[11px] font-bold flex items-center gap-1.5 rounded-md"
                     >
-                      <Play size={10} fill="currentColor" />
+                      <Play size={11} fill="currentColor" />
                       {isEvaluating[activeQuestionIndex] ? 'Running...' : 'Run Sample Tests'}
                     </button>
                   </div>
@@ -1551,37 +1521,36 @@ export default function TcsChallenge({ activeUser }) {
                   />
                 </div>
 
-                <div className="terminal-panel p-4 font-mono text-[11px] min-h-[160px] flex flex-col justify-between border-t border-[hsl(var(--card-border)/0.4)] bg-secondary/20">
-                  <div>
-                    <div className="flex items-center gap-2 text-muted-foreground border-b border-[hsl(var(--card-border)/0.3)] pb-2 mb-2">
-                      <Terminal size={12} />
-                      <span className="font-bold text-[10px] uppercase tracking-wider">Console Output</span>
-                    </div>
+                <div className="terminal-output-panel">
+                  <div className="terminal-header-row">
+                    <Terminal size={14} />
+                    <span>Console Output</span>
+                  </div>
 
+                  <div className="terminal-body">
                     {compileOutputs[activeQuestionIndex] ? (
-                      <pre className="text-green whitespace-pre-wrap leading-relaxed">
+                      <pre className="text-green whitespace-pre-wrap leading-relaxed text-[12px]">
                         {compileOutputs[activeQuestionIndex]}
                       </pre>
                     ) : (
-                      <div className="text-muted-foreground/60 italic py-4">
-                        $ java Solution.java
-                        <br />
-                        No logs printed. Run tests to see output compilation logs...
+                      <div className="terminal-placeholder">
+                        <span>$ java Solution.java</span>
+                        <span>No logs printed. Run tests to see output compilation logs...</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="workspace-submit-foot border-t border-[hsl(var(--card-border)/0.3)] pt-3 mt-4 flex justify-between items-center">
-                    <span className="text-[10px] text-muted-foreground">
+                  <div className="submit-footer">
+                    <span className="submit-hint-text">
                       Click Run to dry run sample test cases
                     </span>
                     <button
                       type="button"
                       onClick={() => submitTest(currentDayTest)}
-                      className="btn-primary px-6 py-1.5 text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5"
+                      className="btn-primary submit-challenge-btn"
                     >
                       <span>Submit Day Challenge</span>
-                      <Check size={14} />
+                      <Check size={15} />
                     </button>
                   </div>
                 </div>
@@ -1704,6 +1673,302 @@ export default function TcsChallenge({ activeUser }) {
           display: flex;
           flex-direction: column;
           gap: 1rem;
+        }
+
+        /* ==========================================
+           WORKSPACE — Premium IDE Layout System
+        ========================================== */
+
+        .workspace-root {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+          width: 100%;
+          max-width: 100%;
+          padding: 0 0.5rem;
+        }
+
+        .workspace-topbar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1rem 1.5rem;
+        }
+
+        .workspace-day-title {
+          font-size: 0.95rem;
+          font-weight: 800;
+          color: hsl(var(--foreground));
+          letter-spacing: -0.01em;
+        }
+
+        .workspace-timer-chip {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          border-radius: 0.75rem;
+          background: hsl(var(--primary) / 0.08);
+          border: 1px solid hsl(var(--primary) / 0.2);
+        }
+
+        /* ─── IDE Grid ─── */
+        .workspace-ide-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.25rem;
+          align-items: start;
+        }
+
+        @media (max-width: 960px) {
+          .workspace-ide-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        /* ─── Problem Description Panel ─── */
+        .workspace-ide-grid .problem-descr-panel {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 0;
+          overflow: hidden;
+          min-height: 680px;
+        }
+
+        .problem-scroll-area {
+          padding: 2rem 2rem 1rem 2rem;
+          overflow-y: auto;
+          flex: 1;
+        }
+
+        .problem-meta-strip {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid hsl(var(--card-border) / 0.3);
+        }
+
+        .problem-topic-label {
+          font-size: 0.8rem;
+          color: hsl(var(--muted-foreground));
+          font-family: var(--font-mono);
+          font-weight: 500;
+        }
+
+        .problem-title {
+          font-size: 1.5rem;
+          font-weight: 900;
+          color: hsl(var(--foreground));
+          margin-bottom: 1.5rem;
+          line-height: 1.3;
+          letter-spacing: -0.02em;
+        }
+
+        .problem-body-text {
+          font-size: 0.95rem;
+          color: hsl(var(--foreground) / 0.88);
+          line-height: 1.85;
+          white-space: pre-line;
+          margin-bottom: 2rem;
+          font-weight: 450;
+        }
+
+        /* ─── Years Seen Card ─── */
+        .years-seen-card {
+          background: hsl(var(--secondary) / 0.35);
+          border: 1px solid hsl(var(--card-border) / 0.3);
+          border-radius: 0.85rem;
+          padding: 1.25rem 1.5rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .section-label {
+          font-size: 0.7rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .years-badge-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+
+        .year-badge {
+          padding: 0.35rem 0.75rem;
+          border-radius: 0.5rem;
+          background: hsl(var(--secondary));
+          color: hsl(var(--foreground));
+          font-size: 0.75rem;
+          font-family: var(--font-mono);
+          font-weight: 600;
+          border: 1px solid hsl(var(--card-border) / 0.3);
+        }
+
+        /* ─── AI Assistance Card ─── */
+        .ai-assistance-card {
+          background: hsl(var(--secondary) / 0.2);
+          border: 1px solid hsl(var(--card-border) / 0.3);
+          border-radius: 0.85rem;
+          padding: 1.25rem 1.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .ai-btn-row {
+          display: flex;
+          gap: 0.75rem;
+        }
+
+        .ai-assist-btn {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 0.75rem 1rem;
+          font-size: 0.82rem;
+          font-weight: 700;
+          border-radius: 0.65rem;
+          border: none;
+          cursor: pointer;
+          font-family: var(--font-sans);
+          transition: all 0.25s ease;
+        }
+
+        .hint-display-card,
+        .solution-display-card {
+          padding: 1.25rem 1.5rem;
+          border-radius: 0.75rem;
+          margin-top: 1rem;
+        }
+
+        .solution-code-pre {
+          padding: 1rem;
+          border-radius: 0.65rem;
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid hsl(var(--primary) / 0.2);
+          color: #6ee7b7;
+          font-family: var(--font-mono);
+          font-size: 0.75rem;
+          overflow-x: auto;
+          white-space: pre;
+          max-height: 260px;
+          line-height: 1.7;
+        }
+
+        .workspace-notice {
+          display: flex;
+          gap: 0.65rem;
+          align-items: flex-start;
+          padding: 1rem 2rem;
+          font-size: 0.78rem;
+          color: hsl(var(--primary));
+          background: hsl(var(--primary) / 0.04);
+          border-top: 1px solid hsl(var(--primary) / 0.1);
+        }
+
+        /* ─── Coding Panel (Right) ─── */
+        .workspace-ide-grid .coding-panel {
+          display: flex;
+          flex-direction: column;
+          justify-content: stretch;
+          padding: 0;
+          overflow: hidden;
+          min-height: 680px;
+        }
+
+        .workspace-ide-grid .editor-control-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.85rem 1.25rem;
+          border-bottom: 1px solid hsl(var(--card-border) / 0.4);
+          background: hsl(var(--secondary) / 0.3);
+        }
+
+        .editor-file-label {
+          font-size: 0.82rem;
+          color: hsl(var(--foreground));
+          font-family: var(--font-mono);
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        /* ─── Terminal Output Panel ─── */
+        .terminal-output-panel {
+          display: flex;
+          flex-direction: column;
+          border-top: 1px solid hsl(var(--card-border) / 0.4);
+          background: hsl(var(--secondary) / 0.15);
+          font-family: var(--font-mono);
+          min-height: 200px;
+        }
+
+        .terminal-header-row {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          padding: 0.85rem 1.25rem;
+          border-bottom: 1px solid hsl(var(--card-border) / 0.25);
+          color: hsl(var(--muted-foreground));
+          font-size: 0.72rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+
+        .terminal-body {
+          padding: 1rem 1.25rem;
+          flex: 1;
+          font-size: 0.8rem;
+        }
+
+        .terminal-placeholder {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          color: hsl(var(--muted-foreground) / 0.5);
+          font-style: italic;
+          padding: 0.75rem 0;
+          line-height: 1.7;
+        }
+
+        .submit-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1rem 1.25rem;
+          border-top: 1px solid hsl(var(--card-border) / 0.3);
+          gap: 1rem;
+        }
+
+        .submit-hint-text {
+          font-size: 0.72rem;
+          color: hsl(var(--muted-foreground));
+          font-family: var(--font-sans);
+        }
+
+        .submit-challenge-btn {
+          padding: 0.6rem 1.75rem;
+          font-size: 0.78rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          border-radius: 0.6rem;
+          white-space: nowrap;
         }
 
         .active-tab-btn {
@@ -1875,8 +2140,8 @@ export default function TcsChallenge({ activeUser }) {
           flex-direction: row !important;
           position: relative !important;
           font-family: monospace !important;
-          font-size: 12px !important;
-          min-height: 380px !important;
+          font-size: 13.5px !important;
+          min-height: 460px !important;
           background: rgba(15, 15, 20, 0.95) !important;
           overflow: hidden !important;
           border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -1889,7 +2154,7 @@ export default function TcsChallenge({ activeUser }) {
           display: flex !important;
           flex-direction: column !important;
           text-align: right !important;
-          padding: 1rem 0.75rem !important;
+          padding: 1.25rem 0.75rem !important;
           color: rgba(255, 255, 255, 0.3) !important;
           border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
           background: rgba(0, 0, 0, 0.4) !important;
@@ -1902,13 +2167,13 @@ export default function TcsChallenge({ activeUser }) {
           flex: 1 !important;
           background: transparent !important;
           color: #f8fafc !important;
-          padding: 1rem !important;
+          padding: 1.25rem !important;
           line-height: 1.6 !important;
           outline: none !important;
           border: none !important;
           resize: none !important;
           font-family: monospace !important;
-          font-size: 12px !important;
+          font-size: 13.5px !important;
           width: 100% !important;
           tab-size: 4 !important;
         }
