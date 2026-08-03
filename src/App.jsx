@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import InitialLoader from './components/InitialLoader';
+import RefreshLoader from './components/RefreshLoader';
+import LoginTransition from './components/LoginTransition';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import JavaFundamentals from './pages/JavaFundamentals';
@@ -25,6 +28,44 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [theme, setTheme] = useState(() => localStorage.getItem('wingora_theme') || 'dark');
+  // Show boot loader if user is NOT logged in (first visit)
+  const [showBootLoader, setShowBootLoader] = useState(() => {
+    const saved = localStorage.getItem('wingora_active_user');
+    return !saved;
+  });
+  // Show panda refresh loader if user IS already logged in (page refresh)
+  const [showRefreshLoader, setShowRefreshLoader] = useState(() => {
+    const saved = localStorage.getItem('wingora_active_user');
+    return !!saved;
+  });
+  const [loginTransition, setLoginTransition] = useState(null);
+
+  const handleBootComplete = useCallback(() => {
+    setShowBootLoader(false);
+  }, []);
+
+  const handleRefreshComplete = useCallback(() => {
+    setShowRefreshLoader(false);
+  }, []);
+
+  // Resolve display name from user object
+  const getDisplayName = useCallback((user) => {
+    if (!user) return 'Student';
+    if (user.role === 'admin') return 'Admin';
+    if (user.userID?.toUpperCase() === 'TC0001') return 'Nithya';
+    try {
+      const students = JSON.parse(localStorage.getItem('wingora_students') || '[]');
+      const match = students.find(s => s.userID === user.userID);
+      if (match?.password) return match.password.replace(/123/g, '');
+    } catch (e) {}
+    return user.userID || 'Student';
+  }, []);
+
+  // Handle login with transition animation
+  const handleLogin = useCallback((user) => {
+    const displayName = getDisplayName(user);
+    setLoginTransition({ user, displayName });
+  }, [getDisplayName]);
   
   const userSuffix = activeUser?.userID ? `_${activeUser.userID}` : '';
 
@@ -144,9 +185,32 @@ export default function App() {
     }
   };
 
+  // Show panda refresh loader when page is refreshed while logged in
+  if (showRefreshLoader && activeUser) {
+    return <RefreshLoader onComplete={handleRefreshComplete} />;
+  }
+
+  // Show terminal boot loader on first visit (not logged in)
+  if (showBootLoader && !activeUser) {
+    return <InitialLoader onComplete={handleBootComplete} />;
+  }
+
   // Render Login screen if not authenticated
-  if (!activeUser) {
-    return <Login onLoginSuccess={setActiveUser} studentsList={studentsList} />;
+  if (!activeUser && !loginTransition) {
+    return <Login onLoginSuccess={handleLogin} studentsList={studentsList} />;
+  }
+
+  // Show login-to-dashboard transition
+  if (loginTransition && !activeUser) {
+    return (
+      <LoginTransition
+        userName={loginTransition.displayName}
+        onComplete={() => {
+          setActiveUser(loginTransition.user);
+          setLoginTransition(null);
+        }}
+      />
+    );
   }
 
   return (

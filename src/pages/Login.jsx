@@ -99,7 +99,7 @@ export default function Login({ onLoginSuccess, studentsList }) {
                 type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter admin or student ID (e.g. TC0001)"
+                placeholder="Enter admin or student ID"
                 className="login-input"
                 disabled={isSubmitting}
                 autoFocus
