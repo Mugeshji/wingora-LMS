@@ -75,7 +75,6 @@ const STYLES = `
 .skills-block h3 { font-size:1rem; font-weight:700; margin-bottom:0.75rem; color:hsl(var(--foreground)); }
 .skills-tags { display:flex; flex-wrap:wrap; gap:0.5rem; }
 .skill-tag { background:hsl(var(--primary)/0.12); color:hsl(var(--primary)); padding:0.3rem 0.7rem; border-radius:9999px; font-size:0.8rem; font-weight:600; border:1px solid hsl(var(--primary)/0.2); }
-
 .step2-actions { display:flex; justify-content:center; padding-top:1rem; }
 
 /* Step 3: Optimize Resume */
@@ -86,20 +85,36 @@ const STYLES = `
 .optimize-bar { height:100%; width:0; background:linear-gradient(90deg,hsl(var(--primary)),#a78bfa); border-radius:3px; animation:optimizeLoad 1.5s ease forwards; }
 @keyframes optimizeLoad { to { width:100%; } }
 
-.optimized-changes { padding:1.5rem; }
-.optimized-changes h3 { font-size:1.1rem; font-weight:700; margin-bottom:1rem; color:hsl(var(--foreground)); }
-.change-list { display:flex; flex-direction:column; gap:0.6rem; }
-.change-item { display:flex; align-items:center; gap:0.6rem; font-size:0.9rem; color:hsl(var(--foreground)/0.85); }
+/* ========== TEMPLATE PICKER - PREMIUM ========== */
+.templates-section { margin-top:1rem; }
+.templates-section > h3 { font-size:1.15rem; font-weight:700; color:hsl(var(--foreground)); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem; }
+.templates-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:0.85rem; }
 
-.resume-preview { padding:0; overflow:hidden; margin-top:0.5rem; }
-.preview-header { background:hsl(var(--secondary)/0.5); padding:0.75rem 1.25rem; font-size:0.85rem; font-weight:600; color:hsl(var(--foreground)); border-bottom:1px solid hsl(var(--card-border)/0.3); }
+.tpl-card { position:relative; cursor:pointer; border-radius:0.85rem; overflow:hidden; border:2px solid hsl(var(--card-border)/0.3); background:hsl(var(--secondary)/0.15); transition:all 0.35s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; }
+.tpl-card:hover { border-color:hsl(var(--primary)/0.5); transform:translateY(-4px); box-shadow:0 12px 30px rgba(0,0,0,0.2); }
+.tpl-card.selected { border-color:hsl(var(--primary)); box-shadow:0 8px 25px hsl(var(--primary)/0.25); background:hsl(var(--primary)/0.04); }
+.tpl-card.selected::after { content:'✓'; position:absolute; top:8px; right:8px; width:22px; height:22px; background:hsl(var(--primary)); color:white; border-radius:50%; font-size:0.7rem; font-weight:800; display:flex; align-items:center; justify-content:center; z-index:2; }
+
+/* Template thumbnail preview */
+.tpl-thumb { width:100%; aspect-ratio:210/297; position:relative; overflow:hidden; background:#fff; border-bottom:1px solid hsl(var(--card-border)/0.2); }
+.tpl-thumb svg { width:100%; height:100%; display:block; }
+
+.tpl-info { padding:0.75rem 0.85rem; flex:1; display:flex; flex-direction:column; gap:0.3rem; }
+.tpl-badge { display:inline-block; font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; padding:0.15rem 0.45rem; border-radius:4px; background:hsl(var(--secondary)/0.6); color:hsl(var(--muted-foreground)); width:fit-content; }
+.tpl-card.selected .tpl-badge { background:hsl(var(--primary)/0.15); color:hsl(var(--primary)); }
+.tpl-info h4 { font-size:0.85rem; font-weight:700; color:hsl(var(--foreground)); line-height:1.2; }
+.tpl-info p { font-size:0.68rem; color:hsl(var(--muted-foreground)); line-height:1.35; }
+
+/* Resume Preview */
+.resume-preview { padding:0; overflow:hidden; margin-top:1.5rem; }
+.preview-header { background:hsl(var(--secondary)/0.5); padding:0.75rem 1.25rem; font-size:0.85rem; font-weight:600; color:hsl(var(--foreground)); border-bottom:1px solid hsl(var(--card-border)/0.3); display:flex; align-items:center; justify-content:space-between; }
 .preview-content { padding:1.25rem; font-family:var(--font-mono); font-size:0.8rem; line-height:1.6; color:hsl(var(--foreground)/0.85); white-space:pre-wrap; word-break:break-word; max-height:350px; overflow-y:auto; margin:0; background:transparent; }
+.preview-tpl-name { font-size:0.75rem; color:hsl(var(--primary)); font-weight:600; background:hsl(var(--primary)/0.1); padding:0.2rem 0.6rem; border-radius:4px; }
 
 .download-section { display:flex; flex-direction:column; align-items:center; gap:0.5rem; padding-top:0.5rem; }
-.download-btn { padding:0.9rem 2rem; font-size:1rem; background:linear-gradient(135deg,#10b981,#059669); box-shadow:0 4px 15px rgba(16,185,129,0.3); }
-.download-btn:hover { box-shadow:0 6px 20px rgba(16,185,129,0.5); }
+.download-btn { padding:0.9rem 2rem; font-size:1rem; background:linear-gradient(135deg,#27272a,#09090b); box-shadow:0 4px 15px rgba(0,0,0,0.25); color:white; border:none; border-radius:0.5rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:0.5rem; transition:all 0.3s; font-family:var(--font-sans); }
+.download-btn:hover { background:#09090b; box-shadow:0 6px 20px rgba(0,0,0,0.4); transform:translateY(-1px); }
 .download-hint { font-size:0.78rem; color:hsl(var(--muted-foreground)); }
-
 .next-step-prompt { display:flex; justify-content:center; padding-top:0.75rem; }
 
 /* Step 4: Job Decision */
@@ -183,6 +198,7 @@ const STYLES = `
   .email-alert-section { flex-direction:column; text-align:center; }
   .decision-buttons { flex-direction:column; }
   .decision-btn { min-width:auto; width:100%; }
+  .templates-grid { grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
 }
 `;
 

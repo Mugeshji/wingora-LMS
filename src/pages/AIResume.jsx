@@ -1,9 +1,11 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { FileText, Upload, CheckCircle, Search, Mail, ArrowRight, ArrowLeft, Briefcase, MapPin, User, ExternalLink, Zap, TrendingUp, Download, RefreshCw, Home, Sparkles } from 'lucide-react';
-import { jsPDF } from 'jspdf';
+import { FileText, Upload, CheckCircle, Search, Mail, ArrowRight, ArrowLeft, Briefcase, MapPin, User, ExternalLink, Zap, TrendingUp, Download, RefreshCw, Home, Sparkles, LayoutTemplate } from 'lucide-react';
 import { extractTextFromPDF, analyzeResume, extractSkills } from '../utils/resumeParser';
 import { searchJobs, calculateSkillMatch, getSkillBreakdown, getCachedJobs, setCachedJobs } from '../utils/jobSearchApi';
 import { sendJobAlertEmail, saveEmailPreferences } from '../utils/emailService';
+import { TEMPLATE_LIST, detectExperienceYears } from '../utils/resumeTemplateConfigs';
+import { generateProfessionalPDF } from '../utils/resumePdfRenderer';
+import { getTemplateSVG } from '../utils/templateThumbnails';
 import STYLES from './AIResumeStyles';
 
 const ROLES = [
@@ -18,78 +20,133 @@ const LOCATIONS = ['Bangalore', 'Chennai', 'Hyderabad', 'Mumbai', 'Pune', 'Delhi
 // Generate an optimized ATS-friendly resume text based on analysis
 function generateOptimizedResume(originalText, atsResult, skills) {
   const lines = originalText.split('\n').filter(l => l.trim());
-  const hasSection = (name) => originalText.toLowerCase().includes(name);
   let optimized = '';
 
   // Header area - keep first few lines (likely name/contact)
   const headerLines = lines.slice(0, Math.min(4, lines.length));
-  optimized += headerLines.join('\n') + '\n';
+  optimized += headerLines.join('\n') + '\n\n';
 
-  // Add LinkedIn if missing
-  const contactCat = atsResult.categories.find(c => c.name === 'Contact Information');
-  if (contactCat && !contactCat.details.linkedin) {
-    optimized += 'LinkedIn: linkedin.com/in/your-profile\n';
-  }
-  if (contactCat && !contactCat.details.portfolio) {
-    optimized += 'GitHub: github.com/your-username\n';
-  }
-  optimized += '\n';
+  // Parse the document into structured sections
+  const data = parseStructuredResume(originalText);
 
-  // Professional Summary
-  if (!hasSection('summary') && !hasSection('objective') && !hasSection('profile')) {
-    optimized += '═══════════════════════════════════════\n';
+  if (data.summary) {
     optimized += 'PROFESSIONAL SUMMARY\n';
     optimized += '═══════════════════════════════════════\n';
-    optimized += `Results-driven professional with expertise in ${skills.slice(0, 4).join(', ')}. `;
-    optimized += 'Passionate about delivering high-quality solutions and driving measurable impact. ';
-    optimized += 'Seeking to leverage technical skills and problem-solving abilities in a challenging role.\n\n';
+    optimized += data.summary.trim() + '\n\n';
   }
 
-  // Skills Section (enhanced)
-  if (skills.length > 0) {
-    optimized += '═══════════════════════════════════════\n';
+  const detectedSkills = data.skills && data.skills.length > 0 ? data.skills : skills;
+  if (detectedSkills && detectedSkills.length > 0) {
     optimized += 'TECHNICAL SKILLS\n';
     optimized += '═══════════════════════════════════════\n';
-    skills.forEach(s => { optimized += `• ${s.charAt(0).toUpperCase() + s.slice(1)}\n`; });
+    detectedSkills.forEach(s => {
+      const cleanSkill = s.trim();
+      if (cleanSkill) {
+        optimized += `• ${cleanSkill.charAt(0).toUpperCase() + cleanSkill.slice(1)}\n`;
+      }
+    });
     optimized += '\n';
   }
 
-  // Keep original content but structured
-  const skipHeader = lines.slice(4);
-  if (skipHeader.length > 0) {
+  if (data.experience && data.experience.length > 0) {
+    optimized += 'EXPERIENCE\n';
     optimized += '═══════════════════════════════════════\n';
-    optimized += 'EXPERIENCE & DETAILS\n';
-    optimized += '═══════════════════════════════════════\n';
-    skipHeader.forEach(line => {
+    data.experience.forEach(line => {
       const trimmed = line.trim();
       if (trimmed) optimized += (trimmed.startsWith('•') || trimmed.startsWith('-') ? trimmed : '• ' + trimmed) + '\n';
     });
     optimized += '\n';
   }
 
-  // Add missing sections
-  if (!hasSection('education')) {
-    optimized += '═══════════════════════════════════════\n';
-    optimized += 'EDUCATION\n';
-    optimized += '═══════════════════════════════════════\n';
-    optimized += '• [Your Degree] — [University Name], [Year]\n\n';
-  }
-
-  if (!hasSection('certification')) {
-    optimized += '═══════════════════════════════════════\n';
-    optimized += 'CERTIFICATIONS\n';
-    optimized += '═══════════════════════════════════════\n';
-    optimized += '• [Add relevant certifications here]\n\n';
-  }
-
-  if (!hasSection('project')) {
-    optimized += '═══════════════════════════════════════\n';
+  if (data.projects && data.projects.length > 0) {
     optimized += 'PROJECTS\n';
     optimized += '═══════════════════════════════════════\n';
-    optimized += '• [Project Name] — [Brief description with technologies used and measurable impact]\n\n';
+    data.projects.forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed) optimized += (trimmed.startsWith('•') || trimmed.startsWith('-') ? trimmed : '• ' + trimmed) + '\n';
+    });
+    optimized += '\n';
   }
 
-  return optimized;
+  if (data.education && data.education.length > 0) {
+    optimized += 'EDUCATION\n';
+    optimized += '═══════════════════════════════════════\n';
+    data.education.forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed) optimized += (trimmed.startsWith('•') || trimmed.startsWith('-') ? trimmed : '• ' + trimmed) + '\n';
+    });
+    optimized += '\n';
+  }
+
+  if (data.certifications && data.certifications.length > 0) {
+    optimized += 'CERTIFICATIONS\n';
+    optimized += '═══════════════════════════════════════\n';
+    data.certifications.forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed) optimized += (trimmed.startsWith('•') || trimmed.startsWith('-') ? trimmed : '• ' + trimmed) + '\n';
+    });
+    optimized += '\n';
+  }
+
+  return optimized.trim();
+}
+
+// Parses optimized text back into structured segments
+function parseStructuredResume(text) {
+  const sections = {
+    name: '',
+    contact: [],
+    summary: '',
+    skills: [],
+    experience: [],
+    education: [],
+    projects: [],
+    certifications: []
+  };
+
+  const lines = text.split('\n').map(l => l.trim());
+  let currentSection = 'header';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line) continue;
+
+    const upper = line.toUpperCase();
+    if (upper === 'PROFESSIONAL SUMMARY') { currentSection = 'summary'; continue; }
+    if (upper === 'TECHNICAL SKILLS') { currentSection = 'skills'; continue; }
+    if (upper === 'EXPERIENCE & DETAILS' || upper === 'EXPERIENCE' || upper === 'WORK EXPERIENCE') { currentSection = 'experience'; continue; }
+    if (upper === 'EDUCATION') { currentSection = 'education'; continue; }
+    if (upper === 'PROJECTS') { currentSection = 'projects'; continue; }
+    if (upper === 'CERTIFICATIONS') { currentSection = 'certifications'; continue; }
+    if (line.startsWith('══════')) continue;
+
+    if (currentSection === 'header') {
+      if (!sections.name && line.length < 40 && !line.includes('@') && !line.includes(':')) {
+        sections.name = line;
+      } else {
+        sections.contact.push(line);
+      }
+    } else if (currentSection === 'summary') {
+      sections.summary += (sections.summary ? ' ' : '') + line;
+    } else if (currentSection === 'skills') {
+      const clean = line.replace(/^[•\-\*▪▸►]\s*/, '');
+      if (clean) sections.skills.push(clean);
+    } else if (currentSection === 'experience') {
+      sections.experience.push(line);
+    } else if (currentSection === 'education') {
+      sections.education.push(line);
+    } else if (currentSection === 'projects') {
+      sections.projects.push(line);
+    } else if (currentSection === 'certifications') {
+      sections.certifications.push(line);
+    }
+  }
+
+  if (!sections.name && lines[0]) {
+    sections.name = lines[0];
+  }
+
+  return sections;
 }
 
 export default function AIResume({ setActiveTab }) {
@@ -101,6 +158,8 @@ export default function AIResume({ setActiveTab }) {
   const [userSkills, setUserSkills] = useState([]);
   const [optimizedText, setOptimizedText] = useState('');
   const [optimizing, setOptimizing] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState('harvard');
+
   const [selectedRole, setSelectedRole] = useState('');
   const [customRole, setCustomRole] = useState('');
   const [expType, setExpType] = useState('fresher');
@@ -147,87 +206,9 @@ export default function AIResume({ setActiveTab }) {
   };
 
   const handleDownload = () => {
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const margin = 18;
-    const usable = pageW - margin * 2;
-    let y = margin;
-
-    const addPage = () => { doc.addPage(); y = margin; };
-    const checkPage = (need) => { if (y + need > pageH - margin) addPage(); };
-
-    // -- Header accent line --
-    doc.setFillColor(124, 58, 237);
-    doc.rect(0, 0, pageW, 6, 'F');
-    y = 14;
-
-    const lines = optimizedText.split('\n');
-    lines.forEach((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) { y += 3; return; }
-
-      // Section dividers
-      if (trimmed.startsWith('══')) return;
-
-      // Section headings (all-caps lines that were headings)
-      const isHeading = /^[A-Z][A-Z &\/]+$/.test(trimmed) && trimmed.length < 50;
-      if (isHeading) {
-        checkPage(14);
-        y += 4;
-        doc.setFillColor(124, 58, 237);
-        doc.rect(margin, y - 1, usable, 7, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.text(trimmed, margin + 3, y + 4);
-        doc.setTextColor(30, 30, 30);
-        y += 11;
-        return;
-      }
-
-      // Name line (first non-empty, non-section line — make it large)
-      if (y < 20) {
-        checkPage(12);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(18);
-        doc.setTextColor(30, 30, 30);
-        doc.text(trimmed, margin, y + 5);
-        y += 10;
-        return;
-      }
-
-      // Bullet point lines
-      const isBullet = /^[•\-\*▪▸►]/.test(trimmed);
-      const content = isBullet ? trimmed.replace(/^[•\-\*▪▸►]\s*/, '') : trimmed;
-      doc.setFont('helvetica', isBullet ? 'normal' : 'normal');
-      doc.setFontSize(9.5);
-      doc.setTextColor(50, 50, 50);
-
-      const wrapped = doc.splitTextToSize(content, usable - (isBullet ? 6 : 0));
-      checkPage(wrapped.length * 4.5 + 1);
-
-      if (isBullet) {
-        doc.setFillColor(124, 58, 237);
-        doc.circle(margin + 1.5, y + 1.2, 0.8, 'F');
-        doc.text(wrapped, margin + 5, y + 2);
-      } else {
-        doc.text(wrapped, margin, y + 2);
-      }
-      y += wrapped.length * 4.5 + 1;
-    });
-
-    // Footer
-    const totalPages = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i);
-      doc.setFontSize(7);
-      doc.setTextColor(160, 160, 160);
-      doc.text('Generated by Wingora LMS — ATS Optimized Resume', margin, pageH - 8);
-      doc.text(`Page ${i} of ${totalPages}`, pageW - margin - 20, pageH - 8);
-    }
-
-    doc.save('Optimized_ATS_Resume.pdf');
+    const data = parseStructuredResume(optimizedText);
+    const expYears = detectExperienceYears(data.experience);
+    generateProfessionalPDF(data, selectedTemplate, expYears);
   };
 
   const handleSearchJobs = async () => {
@@ -362,13 +343,13 @@ export default function AIResume({ setActiveTab }) {
         </div>
       )}
 
-      {/* STEP 3: Optimized Resume + Download */}
+      {/* STEP 3: Optimized Resume + Template Picker */}
       {step === 3 && (
         <div className="resume-section glass-panel animate-fade">
           <button className="back-btn" onClick={() => setStep(2)}><ArrowLeft size={16} /> Back</button>
           <div className="section-badge"><Sparkles size={16} /><span>Resume Optimizer</span></div>
           <h2>Your ATS-Optimized Resume</h2>
-          <p className="section-desc">We've automatically restructured your resume with proper ATS-friendly formatting, added missing sections, and enhanced keywords.</p>
+          <p className="section-desc">We've restructured your content to maximize ATS score. Choose one of our 10 professional monochrome templates below to download.</p>
 
           {optimizing ? (
             <div className="optimizing-block">
@@ -381,31 +362,57 @@ export default function AIResume({ setActiveTab }) {
             </div>
           ) : (
             <>
-              <div className="optimized-changes glass-card">
-                <h3>✨ What we improved:</h3>
-                <div className="change-list">
-                  {!resumeText.toLowerCase().includes('summary') && <div className="change-item"><CheckCircle size={14} className="text-green" /><span>Added Professional Summary section</span></div>}
-                  {!resumeText.toLowerCase().includes('linkedin') && <div className="change-item"><CheckCircle size={14} className="text-green" /><span>Added LinkedIn profile placeholder</span></div>}
-                  {!resumeText.toLowerCase().includes('github') && <div className="change-item"><CheckCircle size={14} className="text-green" /><span>Added GitHub/Portfolio placeholder</span></div>}
-                  <div className="change-item"><CheckCircle size={14} className="text-green" /><span>Organized skills into a dedicated section</span></div>
-                  <div className="change-item"><CheckCircle size={14} className="text-green" /><span>Added bullet points for better ATS parsing</span></div>
-                  {!resumeText.toLowerCase().includes('project') && <div className="change-item"><CheckCircle size={14} className="text-green" /><span>Added Projects section template</span></div>}
-                  {!resumeText.toLowerCase().includes('certification') && <div className="change-item"><CheckCircle size={14} className="text-green" /><span>Added Certifications section template</span></div>}
+              {/* Template Picker */}
+              <div className="templates-section">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <LayoutTemplate size={20} className="text-purple" />
+                    Select ATS-Compliant Template (Pure Black & White)
+                  </h3>
+                  <button 
+                    className="btn-secondary" 
+                    onClick={() => {
+                      const randomIndex = Math.floor(Math.random() * TEMPLATE_LIST.length);
+                      setSelectedTemplate(TEMPLATE_LIST[randomIndex].id);
+                    }}
+                    style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+                  >
+                    <RefreshCw size={14} /> Shuffle Layout
+                  </button>
+                </div>
+                <div className="templates-grid">
+                  {TEMPLATE_LIST.map(t => (
+                    <div 
+                      key={t.id} 
+                      className={`tpl-card ${selectedTemplate === t.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedTemplate(t.id)}
+                    >
+                      <div className="tpl-thumb">
+                        {getTemplateSVG(t.id)}
+                      </div>
+                      <div className="tpl-info">
+                        <span className="tpl-badge">{t.badge}</span>
+                        <h4>{t.name}</h4>
+                        <p>{t.desc}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="resume-preview glass-card">
+               <div className="resume-preview glass-card">
                 <div className="preview-header">
                   <span>📄 Optimized Resume Preview</span>
+                  <span className="preview-tpl-name">Layout: {TEMPLATE_LIST.find(t => t.id === selectedTemplate)?.name || 'Default'}</span>
                 </div>
                 <pre className="preview-content">{optimizedText}</pre>
               </div>
 
               <div className="download-section">
-                <button className="btn-primary download-btn" onClick={handleDownload}>
-                  <Download size={18} /><span>Download Optimized Resume</span>
+                <button className="download-btn" onClick={handleDownload}>
+                  <Download size={18} /><span>Download PDF Resume</span>
                 </button>
-                <p className="download-hint">Downloads as a professionally formatted PDF — ready to submit directly!</p>
+                <p className="download-hint">Generates a standard black-and-white PDF for maximum ATS readability.</p>
               </div>
 
               <div className="next-step-prompt">
