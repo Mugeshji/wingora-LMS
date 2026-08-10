@@ -10,6 +10,7 @@ import OOPsConcepts from './pages/OOPsConcepts';
 import DSALeetcode from './pages/DSALeetcode';
 import AIInterview from './pages/AIInterview';
 import MCQQuiz from './pages/MCQQuiz';
+import AIResume from './pages/AIResume';
 import TcsChallenge from './pages/TcsChallenge';
 import TcsAptitude from './pages/TcsAptitude';
 import Login from './pages/Login';
@@ -169,6 +170,8 @@ export default function App() {
             setBookmarks={setBookmarks}
           />
         );
+      case 'ai_resume':
+        return <AIResume setActiveTab={setActiveTab} />;
       case 'interview':
         return <AIInterview />;
       case 'quiz':

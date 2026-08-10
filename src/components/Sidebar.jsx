@@ -11,7 +11,8 @@ import {
   Award,
   Flame,
   Users,
-  LogOut
+  LogOut,
+  FileText
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, theme, setTheme, bookmarksCount, activeUser, onLogout }) {
@@ -41,6 +42,7 @@ export default function Sidebar({ activeTab, setActiveTab, theme, setTheme, book
     { id: 'oops', label: 'OOPs Concepts', icon: Layers },
     { id: 'dsa', label: 'DSA Practice', icon: Code },
     { id: 'interview', label: 'AI Interview', icon: Sparkles },
+    { id: 'ai_resume', label: 'AI Resume', icon: FileText },
     { id: 'quiz', label: 'MCQ Quiz', icon: Award }
   );
 
