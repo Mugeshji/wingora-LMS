@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  GraduationCap, 
   Lock, 
   User, 
   Eye, 
@@ -21,43 +20,35 @@ export default function Login({ onLoginSuccess, studentsList }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     setErrorMsg('');
-    setIsSubmitting(true);
 
-    // Simulate database lookup delays slightly for a premium feel
-    setTimeout(() => {
-      const trimmedUser = username.trim();
-      const trimmedPass = password.trim();
+    const trimmedUser = username.trim();
+    const trimmedPass = password.trim();
 
-      if (!trimmedUser || !trimmedPass) {
-        setErrorMsg('Please enter both username/UserID and password.');
-        setIsSubmitting(false);
-        return;
-      }
+    if (!trimmedUser || !trimmedPass) {
+      setErrorMsg('Please enter both username/UserID and password.');
+      return;
+    }
 
-      // 1. Check Admin Credentials
-      if (trimmedUser === 'admin' && trimmedPass === 'Mugesh#') {
-        const adminUser = { userID: 'admin', role: 'admin' };
-        localStorage.setItem('wingora_active_user', JSON.stringify(adminUser));
-        onLoginSuccess(adminUser);
-        setIsSubmitting(false);
-        return;
-      }
+    // 1. Check Admin Credentials
+    if (trimmedUser === 'admin' && trimmedPass === 'Mugesh#') {
+      const adminUser = { userID: 'admin', role: 'admin' };
+      localStorage.setItem('wingora_active_user', JSON.stringify(adminUser));
+      onLoginSuccess(adminUser);
+      return;
+    }
 
-      // 2. Check Student Credentials
-      const matchedStudent = studentsList.find(
-        student => student.userID === trimmedUser && student.password === trimmedPass
-      );
+    // 2. Check Student Credentials
+    const matchedStudent = studentsList.find(
+      student => student.userID === trimmedUser && student.password === trimmedPass
+    );
 
-      if (matchedStudent) {
-        const studentUser = { userID: matchedStudent.userID, role: 'student' };
-        localStorage.setItem('wingora_active_user', JSON.stringify(studentUser));
-        onLoginSuccess(studentUser);
-      } else {
-        setErrorMsg('Invalid UserID or password. Please try again.');
-      }
-      
-      setIsSubmitting(false);
-    }, 800);
+    if (matchedStudent) {
+      const studentUser = { userID: matchedStudent.userID, role: 'student' };
+      localStorage.setItem('wingora_active_user', JSON.stringify(studentUser));
+      onLoginSuccess(studentUser);
+    } else {
+      setErrorMsg('Invalid UserID or password. Please try again.');
+    }
   };
 
   return (
@@ -70,9 +61,6 @@ export default function Login({ onLoginSuccess, studentsList }) {
       >
         {/* Logo and Brand */}
         <div className="text-center mb-8">
-          <div className="brand-logo-circle mx-auto mb-4">
-            <GraduationCap size={32} className="text-white" />
-          </div>
           <h1 className="brand-title">wingora<span className="brand-sub">LMS</span></h1>
           <p className="brand-tagline">Learning Management System</p>
         </div>

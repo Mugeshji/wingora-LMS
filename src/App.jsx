@@ -62,11 +62,10 @@ export default function App() {
     return user.userID || 'Student';
   }, []);
 
-  // Handle login with transition animation
+  // Handle login directly without transition animation
   const handleLogin = useCallback((user) => {
-    const displayName = getDisplayName(user);
-    setLoginTransition({ user, displayName });
-  }, [getDisplayName]);
+    setActiveUser(user);
+  }, []);
   
   const userSuffix = activeUser?.userID ? `_${activeUser.userID}` : '';
 
@@ -199,21 +198,8 @@ export default function App() {
   }
 
   // Render Login screen if not authenticated
-  if (!activeUser && !loginTransition) {
+  if (!activeUser) {
     return <Login onLoginSuccess={handleLogin} studentsList={studentsList} />;
-  }
-
-  // Show login-to-dashboard transition
-  if (loginTransition && !activeUser) {
-    return (
-      <LoginTransition
-        userName={loginTransition.displayName}
-        onComplete={() => {
-          setActiveUser(loginTransition.user);
-          setLoginTransition(null);
-        }}
-      />
-    );
   }
 
   return (

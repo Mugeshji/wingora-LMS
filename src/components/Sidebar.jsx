@@ -49,8 +49,8 @@ export default function Sidebar({ activeTab, setActiveTab, theme, setTheme, book
   return (
     <div className="sidebar-container">
       <div className="sidebar-logo">
-        <div className="logo-icon-wrapper">
-          <GraduationCap className="logo-icon" />
+        <div className="logo-icon-wrapper" title="Wingora LMS Study Favicon">
+          <img src="/favicon.svg" alt="Wingora 3D Study Favicon" className="logo-3d-favicon" />
         </div>
         <span className="logo-text">wingora<span className="logo-subtext">LMS</span></span>
       </div>
@@ -156,17 +156,36 @@ export default function Sidebar({ activeTab, setActiveTab, theme, setTheme, book
 
         .logo-icon-wrapper {
           background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6));
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 0.5rem;
+          width: 2.65rem;
+          height: 2.65rem;
+          border-radius: 0.75rem;
           display: flex;
           align-items: center;
           justify-content: center;
+          padding: 0.25rem;
           box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
+          transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+          cursor: pointer;
         }
 
-        .logo-icon {
-          color: white;
+        .sidebar-logo:hover .logo-icon-wrapper {
+          transform: scale(1.15) rotate(6deg);
+          box-shadow: 0 0 20px hsl(var(--primary) / 0.6);
+        }
+
+        .sidebar-logo:active .logo-icon-wrapper {
+          transform: scale(0.92) rotate(-4deg);
+        }
+
+        .logo-3d-favicon {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          transition: transform 0.4s ease;
+        }
+
+        .sidebar-logo:hover .logo-3d-favicon {
+          transform: scale(1.08);
         }
 
         .logo-text {

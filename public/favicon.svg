@@ -1,1 +1,307 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" fill="none" viewBox="0 0 48 46"><path fill="#863bff" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" style="fill:#863bff;fill:color(display-p3 .5252 .23 1);fill-opacity:1"/><mask id="a" width="48" height="46" x="0" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M25.842 44.938c-.664.844-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.183c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.498 0-3.579-1.842-3.579H1.133c-.92 0-1.456-1.04-.92-1.787L9.91.473c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.578 1.842 3.578h11.377c.943 0 1.473 1.088.89 1.832L25.843 44.94z" style="fill:#000;fill-opacity:1"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#ede6ff" rx="5.508" ry="14.704" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -4.47 31.516)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#ede6ff" rx="10.399" ry="29.851" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -39.328 7.883)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#7e14ff" rx="5.508" ry="30.487" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -25.913 -14.639)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -32.644 -3.334)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -34.34 30.47)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#ede6ff" rx="14.072" ry="22.078" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="rotate(93.35 24.506 48.493)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx=".387" cy="8.972" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(39.51 .387 8.972)"/></g><g filter="url(#k)"><ellipse cx="47.523" cy="-6.092" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 47.523 -6.092)"/></g><g filter="url(#l)"><ellipse cx="41.412" cy="6.333" fill="#47bfff" rx="5.971" ry="9.665" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 41.412 6.333)"/></g><g filter="url(#m)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#n)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#o)"><ellipse cx="35.651" cy="29.907" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 35.651 29.907)"/></g><g filter="url(#p)"><ellipse cx="38.418" cy="32.4" fill="#47bfff" rx="5.971" ry="15.297" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 38.418 32.4)"/></g></g><defs><filter id="b" width="60.045" height="41.654" x="-19.77" y="16.149" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-54.613" y="-7.533" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-49.64" y="2.03" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-45.045" y="20.029" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-43.513" y="21.178" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="15.756" y="-17.901" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-27.636" y="-22.853" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="20.116" y="-38.415" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="24.641" y="-11.323" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="8.244" y="-2.416" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="18.713" y="10.588" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter></defs></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <!-- Background Glass Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0b1e" />
+      <stop offset="50%" stop-color="#140f32" />
+      <stop offset="100%" stop-color="#070614" />
+    </linearGradient>
+
+    <linearGradient id="glassBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0.8" />
+    </linearGradient>
+
+    <!-- 3D Graduation Cap Gradients -->
+    <linearGradient id="capTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed" />
+      <stop offset="40%" stop-color="#6d28d9" />
+      <stop offset="100%" stop-color="#4c1d95" />
+    </linearGradient>
+
+    <linearGradient id="capLeftBevel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b0764" />
+      <stop offset="100%" stop-color="#2e1065" />
+    </linearGradient>
+
+    <linearGradient id="capRightBevel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#6d28d9" />
+    </linearGradient>
+
+    <linearGradient id="skullCapGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#581c87" />
+      <stop offset="100%" stop-color="#3b0764" />
+    </linearGradient>
+
+    <!-- Metallic Gold Tassel Gradients -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="30%" stop-color="#fde047" />
+      <stop offset="70%" stop-color="#eab308" />
+      <stop offset="100%" stop-color="#ca8a04" />
+    </linearGradient>
+
+    <!-- 3D Open Book Gradients -->
+    <linearGradient id="bookCoverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <linearGradient id="pageLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="80%" stop-color="#e0e7ff" />
+      <stop offset="100%" stop-color="#c7d2fe" />
+    </linearGradient>
+
+    <linearGradient id="pageRightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0e7ff" />
+      <stop offset="80%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#a5b4fc" />
+    </linearGradient>
+
+    <linearGradient id="beamGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0" />
+    </linearGradient>
+
+    <radialGradient id="auraGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.6" />
+      <stop offset="40%" stop-color="#818cf8" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#0b0b1e" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Filter Effects for Glow & Shadows -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+  </defs>
+
+  <style>
+    /* CSS Animations inside SVG */
+    .bg-aura {
+      animation: pulseAura 4s ease-in-out infinite alternate;
+    }
+    
+    .light-beam {
+      animation: beamPulse 3s ease-in-out infinite alternate;
+      transform-origin: 64px 88px;
+    }
+
+    .cap-group {
+      animation: floatCap 3.5s ease-in-out infinite;
+      transform-origin: 64px 44px;
+    }
+
+    .tassel-group {
+      animation: swayTassel 3.5s ease-in-out infinite;
+      transform-origin: 64px 38px;
+    }
+
+    .cap-shadow {
+      animation: shadowScale 3.5s ease-in-out infinite;
+      transform-origin: 64px 76px;
+    }
+
+    .book-group {
+      animation: bookFloat 3.5s ease-in-out infinite alternate;
+    }
+
+    .sparkle-1 {
+      animation: sparkRise1 3s ease-in-out infinite;
+    }
+    
+    .sparkle-2 {
+      animation: sparkRise2 2.5s ease-in-out infinite 0.8s;
+    }
+
+    .sparkle-3 {
+      animation: sparkRise3 3.2s ease-in-out infinite 1.5s;
+    }
+
+    .page-line {
+      animation: lineGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatCap {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-8px) rotate(-3deg);
+      }
+    }
+
+    @keyframes swayTassel {
+      0%, 100% {
+        transform: rotate(0deg);
+      }
+      25% {
+        transform: rotate(8deg);
+      }
+      75% {
+        transform: rotate(-6deg);
+      }
+    }
+
+    @keyframes shadowScale {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.55;
+      }
+      50% {
+        transform: scale(0.75);
+        opacity: 0.25;
+      }
+    }
+
+    @keyframes pulseAura {
+      0% {
+        opacity: 0.5;
+        transform: scale(0.95);
+      }
+      100% {
+        opacity: 0.9;
+        transform: scale(1.08);
+      }
+    }
+
+    @keyframes beamPulse {
+      0% {
+        opacity: 0.3;
+        transform: scaleX(0.9);
+      }
+      100% {
+        opacity: 0.7;
+        transform: scaleX(1.15);
+      }
+    }
+
+    @keyframes bookFloat {
+      0% {
+        transform: translateY(0px);
+      }
+      100% {
+        transform: translateY(-2px);
+      }
+    }
+
+    @keyframes sparkRise1 {
+      0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translate(-12px, -22px) scale(1.1); opacity: 0; }
+    }
+
+    @keyframes sparkRise2 {
+      0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translate(14px, -26px) scale(1.2); opacity: 0; }
+    }
+
+    @keyframes sparkRise3 {
+      0% { transform: translate(0, 0) scale(0.3); opacity: 0; }
+      50% { opacity: 0.9; }
+      100% { transform: translate(0px, -28px) scale(1); opacity: 0; }
+    }
+
+    @keyframes lineGlow {
+      0% { opacity: 0.4; }
+      100% { opacity: 1; filter: drop-shadow(0 0 3px #a855f7); }
+    }
+  </style>
+
+  <!-- Container Base -->
+  <rect x="6" y="6" width="116" height="116" rx="26" ry="26" fill="url(#bgGrad)" stroke="url(#glassBorderGrad)" stroke-width="2.5" filter="url(#softShadow)" />
+
+  <!-- Ambient Glow Aura -->
+  <circle class="bg-aura" cx="64" cy="62" r="48" fill="url(#auraGlow)" />
+
+  <!-- Upward Light Beam from Book -->
+  <polygon class="light-beam" points="40,88 88,88 104,18 24,18" fill="url(#beamGrad)" />
+
+  <!-- Sparkling Dust Particles -->
+  <g class="sparkle-1" transform="translate(42, 60)">
+    <path d="M0,-4 Q0,0 4,0 Q0,0 0,4 Q0,0 -4,0 Q0,0 0,-4 Z" fill="#fde047" />
+  </g>
+  <g class="sparkle-2" transform="translate(86, 54)">
+    <path d="M0,-5 Q0,0 5,0 Q0,0 0,5 Q0,0 -5,0 Q0,0 0,-5 Z" fill="#38bdf8" />
+  </g>
+  <g class="sparkle-3" transform="translate(64, 48)">
+    <path d="M0,-3 Q0,0 3,0 Q0,0 0,3 Q0,0 -3,0 Q0,0 0,-3 Z" fill="#c084fc" />
+  </g>
+
+  <!-- 3D Open Study Book Group -->
+  <g class="book-group" filter="url(#softShadow)">
+    <!-- Book 3D Cover Underneath -->
+    <path d="M 22,82 Q 64,96 106,82 L 108,89 Q 64,103 20,89 Z" fill="url(#bookCoverGrad)" stroke="#6366f1" stroke-width="0.75" />
+    
+    <!-- 3D Pages Thickness Base -->
+    <path d="M 23,80 Q 64,93 105,80 L 105,85 Q 64,98 23,85 Z" fill="#94a3b8" />
+
+    <!-- Left Open Page -->
+    <path d="M 64,92 Q 42,85 24,78 Q 40,71 64,76 Z" fill="url(#pageLeftGrad)" stroke="#cbd5e1" stroke-width="0.5" />
+
+    <!-- Right Open Page -->
+    <path d="M 64,92 Q 86,85 104,78 Q 88,71 64,76 Z" fill="url(#pageRightGrad)" stroke="#cbd5e1" stroke-width="0.5" />
+
+    <!-- Book Spine Glow Line -->
+    <path d="M 64,76 L 64,92" stroke="#a855f7" stroke-width="1.8" stroke-linecap="round" />
+
+    <!-- Code / Study Text Lines on Left Page -->
+    <path class="page-line" d="M 33,78 Q 46,82 56,84 M 35,81 Q 46,85 55,87" stroke="#6366f1" stroke-width="1.2" stroke-linecap="round" />
+
+    <!-- Graphic / Progress Chart Bar Lines on Right Page -->
+    <path class="page-line" d="M 72,84 Q 82,82 94,78 M 73,87 Q 83,85 92,81" stroke="#ec4899" stroke-width="1.2" stroke-linecap="round" />
+    
+    <!-- Luminous Book Bookmark ribbon -->
+    <path d="M 64,92 Q 68,98 65,102 L 61,98 Z" fill="#f59e0b" />
+  </g>
+
+  <!-- Dynamic Shadow on Book from Floating Cap -->
+  <ellipse class="cap-shadow" cx="64" cy="76" rx="26" ry="6" fill="#000000" />
+
+  <!-- 3D Floating Graduation Cap Group -->
+  <g class="cap-group" filter="url(#softShadow)">
+    
+    <!-- Skull Cap Base under Mortarboard -->
+    <path d="M 44,43 C 44,55 84,55 84,43 L 80,50 C 80,59 48,59 48,50 Z" fill="url(#skullCapGrad)" stroke="#3b0764" stroke-width="0.5" />
+    <path d="M 48,46 Q 64,57 80,46 L 80,52 Q 64,61 48,52 Z" fill="#6d28d9" opacity="0.8" />
+
+    <!-- 3D Mortarboard Left Front Bevel (Depth thickness) -->
+    <path d="M 18,36 L 64,52 L 64,56 L 18,40 Z" fill="url(#capLeftBevel)" />
+
+    <!-- 3D Mortarboard Right Front Bevel (Depth thickness) -->
+    <path d="M 64,52 L 110,36 L 110,40 L 64,56 Z" fill="url(#capRightBevel)" />
+
+    <!-- Mortarboard Top Diamond Face -->
+    <path d="M 64,20 L 110,36 L 64,52 L 18,36 Z" fill="url(#capTopGrad)" stroke="#a855f7" stroke-width="0.75" />
+
+    <!-- Top Highlight Trim Line -->
+    <path d="M 18,36 L 64,20 L 110,36" stroke="#c084fc" stroke-width="1.2" fill="none" opacity="0.8" />
+
+    <!-- Golden Center Button -->
+    <ellipse cx="64" cy="36" rx="4" ry="2.5" fill="url(#goldGrad)" stroke="#b45309" stroke-width="0.5" filter="url(#neonGlow)" />
+
+    <!-- Swaying Tassel Group -->
+    <g class="tassel-group">
+      <!-- Tassel String running from center to left edge -->
+      <path d="M 64,36 Q 44,35 34,42 Q 32,50 35,62" fill="none" stroke="url(#goldGrad)" stroke-width="1.8" stroke-linecap="round" />
+      
+      <!-- Tassel Band Ring -->
+      <rect x="33" y="60" width="4" height="2" rx="1" fill="#78350f" />
+
+      <!-- Golden Tassel Fringe Brush -->
+      <path d="M 33,62 L 30,75 C 30,77 39,77 39,75 L 36,62 Z" fill="url(#goldGrad)" stroke="#b45309" stroke-width="0.4" />
+      
+      <!-- Tassel Fringe Detail Lines -->
+      <path d="M 32,64 L 32,74 M 35,64 L 35,75 M 37,64 L 37,74" stroke="#fef08a" stroke-width="0.6" opacity="0.9" />
+    </g>
+  </g>
+</svg>

@@ -19,12 +19,15 @@ import {
   Brain,
   Terminal,
   Lock,
-  CheckCircle2
+  CheckCircle2,
+  Download,
+  FileBarChart
 } from 'lucide-react';
 import { javaBasics } from '../data/javaBasics';
 import { oopsConcepts } from '../data/oops';
 import { dsaProblems } from '../data/dsaProblems';
 import { javaQuestions, dsaQuestions } from '../data/interviewQuestions';
+import { generateStudentReportPDF } from '../utils/studentReportGenerator';
 
 export default function Dashboard({ setActiveTab, setNavigationPayload, bookmarks = [], setBookmarks }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -227,6 +230,18 @@ export default function Dashboard({ setActiveTab, setNavigationPayload, bookmark
             <p style={{color:'hsl(var(--muted-foreground))', fontSize:'0.92rem', maxWidth:'620px', lineHeight:1.6}}>
               Accelerate your engineering milestones. Solve practice worksheets, analyze OOP blueprints, tackle coding tracks, and evaluate progress using interactive MCQ engines.
             </p>
+
+            <div style={{ marginTop: '0.85rem' }}>
+              <button 
+                onClick={() => generateStudentReportPDF()} 
+                className="btn-download-report"
+                title="Download real-time PDF academic report with visual charts & diagrams"
+              >
+                <FileBarChart size={18} />
+                <span>Download My Report (PDF)</span>
+                <Download size={16} />
+              </button>
+            </div>
           </div>
 
           {/* Quick Stats Grid */}
@@ -283,31 +298,44 @@ export default function Dashboard({ setActiveTab, setNavigationPayload, bookmark
           <span style={{fontSize:'0.75rem', color:'hsl(var(--muted-foreground))'}}>Click on any panel to launch practice modules</span>
         </div>
 
-        <div className="search-bar-container">
-          <div className="search-input-wrapper">
-            <Search className="search-icon" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search lessons, patterns, code challenges..."
-              value={searchQuery}
-              onChange={handleSearch}
-              className="glass-input search-input"
-            />
-          </div>
+        <div style={{display:'flex', alignItems:'center', gap:'1rem', flexWrap:'wrap', flexGrow:1, justifyContent:'flex-end'}}>
+          <button 
+            onClick={() => generateStudentReportPDF()} 
+            className="btn-download-report"
+            style={{ padding: '0.55rem 1.15rem', fontSize: '0.82rem' }}
+            title="Download real-time PDF academic report with visual charts & diagrams"
+          >
+            <FileBarChart size={16} />
+            <span>Download Report</span>
+            <Download size={14} />
+          </button>
 
-          {searchResults.length > 0 && (
-            <div className="search-results-overlay glass-panel">
-              {searchResults.map((res, idx) => (
-                <div key={idx} className="search-result-item" onClick={() => handleResultClick(res)}>
-                  <div className="result-item-header">
-                    <span className="result-title">{res.title}</span>
-                    <span className="result-badge">{res.type}</span>
-                  </div>
-                  <p className="result-desc">{res.desc}</p>
-                </div>
-              ))}
+          <div className="search-bar-container">
+            <div className="search-input-wrapper">
+              <Search className="search-icon" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search lessons, patterns, code challenges..."
+                value={searchQuery}
+                onChange={handleSearch}
+                className="glass-input search-input"
+              />
             </div>
-          )}
+
+            {searchResults.length > 0 && (
+              <div className="search-results-overlay glass-panel">
+                {searchResults.map((res, idx) => (
+                  <div key={idx} className="search-result-item" onClick={() => handleResultClick(res)}>
+                    <div className="result-item-header">
+                      <span className="result-title">{res.title}</span>
+                      <span className="result-badge">{res.type}</span>
+                    </div>
+                    <p className="result-desc">{res.desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -504,6 +532,32 @@ export default function Dashboard({ setActiveTab, setNavigationPayload, bookmark
       </div>
 
       <style>{`
+        .btn-download-report {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.6rem;
+          padding: 0.65rem 1.35rem;
+          background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+          color: #ffffff;
+          font-weight: 700;
+          font-size: 0.88rem;
+          border-radius: 0.75rem;
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          box-shadow: 0 4px 18px rgba(124, 58, 237, 0.4);
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-download-report:hover {
+          transform: translateY(-2px) scale(1.03);
+          box-shadow: 0 8px 28px rgba(124, 58, 237, 0.6);
+          background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        }
+
+        .btn-download-report:active {
+          transform: translateY(0) scale(0.97);
+        }
+
         .dashboard-page {
           display: flex;
           flex-direction: column;
