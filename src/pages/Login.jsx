@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import loginBg from '../assets/login_bg_premium.png';
 import { 
   Lock, 
   User, 
@@ -162,8 +163,19 @@ export default function Login({ onLoginSuccess, studentsList, theme, setTheme })
           justify-content: center;
           min-height: 100vh;
           width: 100%;
-          background: radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.08) 0%, transparent 60%);
+          position: relative;
+          overflow: hidden;
+          background: linear-gradient(135deg, rgba(8, 9, 15, 0.94), rgba(17, 14, 38, 0.9)), url(${loginBg}) center/cover no-repeat;
           padding: 1.5rem;
+        }
+
+        .login-card-container {
+          position: relative;
+          z-index: 2;
+        }
+
+        .login-theme-toggle {
+          z-index: 10 !important;
         }
 
         .login-theme-toggle {
@@ -204,7 +216,7 @@ export default function Login({ onLoginSuccess, studentsList, theme, setTheme })
 
         /* Light Mode Styles for Login Page */
         [data-theme='light'] .login-screen-wrapper {
-          background: radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.06) 0%, transparent 60%);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(244, 245, 249, 0.84)), url(${loginBg}) center/cover no-repeat;
         }
 
         [data-theme='light'] .login-theme-toggle {
