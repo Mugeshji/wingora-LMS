@@ -24,7 +24,26 @@ export default function App() {
 
   const [studentsList, setStudentsList] = useState(() => {
     const saved = localStorage.getItem('wingora_students');
-    return saved ? JSON.parse(saved) : [{ userID: 'TC0001', password: 'Nithya123' }];
+    let list = saved ? JSON.parse(saved) : [];
+    
+    // Ensure default predefined students exist
+    const defaultStudents = [
+      { userID: 'TC0001', password: 'Nithya123' },
+      { userID: 'TC0002', password: 'Krishna123' }
+    ];
+    
+    let updated = false;
+    defaultStudents.forEach(ds => {
+      if (!list.some(s => s.userID.toUpperCase() === ds.userID.toUpperCase())) {
+        list.push(ds);
+        updated = true;
+      }
+    });
+    
+    if (updated || !saved) {
+      localStorage.setItem('wingora_students', JSON.stringify(list));
+    }
+    return list;
   });
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -54,6 +73,7 @@ export default function App() {
     if (!user) return 'Student';
     if (user.role === 'admin') return 'Admin';
     if (user.userID?.toUpperCase() === 'TC0001') return 'Nithya';
+    if (user.userID?.toUpperCase() === 'TC0002') return 'Krishna';
     try {
       const students = JSON.parse(localStorage.getItem('wingora_students') || '[]');
       const match = students.find(s => s.userID === user.userID);
@@ -62,9 +82,9 @@ export default function App() {
     return user.userID || 'Student';
   }, []);
 
-  // Handle login directly without transition animation
+  // Handle login with transition animation
   const handleLogin = useCallback((user) => {
-    setActiveUser(user);
+    setLoginTransition(user);
   }, []);
   
   const userSuffix = activeUser?.userID ? `_${activeUser.userID}` : '';
@@ -85,9 +105,10 @@ export default function App() {
   // Navigation payload for jumping from global search to specific questions
   const [navigationPayload, setNavigationPayload] = useState(null);
 
-  // Sync theme changes with localStorage
+  // Sync theme changes with localStorage and document body
   useEffect(() => {
     localStorage.setItem('wingora_theme', theme);
+    document.body.setAttribute('data-theme', theme);
   }, [theme]);
 
   // Sync bookmarks state when bookmarks change
@@ -197,9 +218,22 @@ export default function App() {
     return <InitialLoader onComplete={handleBootComplete} />;
   }
 
+  // Show login transition animation after successful authentication
+  if (loginTransition) {
+    return (
+      <LoginTransition 
+        userName={getDisplayName(loginTransition)} 
+        onComplete={() => {
+          setActiveUser(loginTransition);
+          setLoginTransition(null);
+        }} 
+      />
+    );
+  }
+
   // Render Login screen if not authenticated
   if (!activeUser) {
-    return <Login onLoginSuccess={handleLogin} studentsList={studentsList} />;
+    return <Login onLoginSuccess={handleLogin} studentsList={studentsList} theme={theme} setTheme={setTheme} />;
   }
 
   return (

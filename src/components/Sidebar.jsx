@@ -12,7 +12,8 @@ import {
   Flame,
   Users,
   LogOut,
-  FileText
+  FileText,
+  Brain
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, theme, setTheme, bookmarksCount, activeUser, onLogout }) {
@@ -37,7 +38,7 @@ export default function Sidebar({ activeTab, setActiveTab, theme, setTheme, book
 
   navItems.push(
     { id: 'tcs_challenge', label: 'TCS 75-Day Coding', icon: Flame },
-    { id: 'tcs_aptitude', label: 'TCS Aptitude & Logic', icon: GraduationCap },
+    { id: 'tcs_aptitude', label: 'TCS Aptitude & Logic', icon: Brain },
     { id: 'java', label: 'Core Java', icon: BookOpen },
     { id: 'oops', label: 'OOPs Concepts', icon: Layers },
     { id: 'dsa', label: 'DSA Practice', icon: Code },
@@ -49,8 +50,8 @@ export default function Sidebar({ activeTab, setActiveTab, theme, setTheme, book
   return (
     <div className="sidebar-container">
       <div className="sidebar-logo">
-        <div className="logo-icon-wrapper" title="Wingora LMS Study Favicon">
-          <img src="/favicon.svg" alt="Wingora 3D Study Favicon" className="logo-3d-favicon" />
+        <div className="logo-icon-wrapper" title="Wingora LMS">
+          <BookOpen size={18} color="white" />
         </div>
         <span className="logo-text">wingora<span className="logo-subtext">LMS</span></span>
       </div>
@@ -95,6 +96,7 @@ export default function Sidebar({ activeTab, setActiveTab, theme, setTheme, book
               const getDisplayName = (id) => {
                 if (!id) return 'Student';
                 if (id.toUpperCase() === 'TC0001') return 'Nithya';
+                if (id.toUpperCase() === 'TC0002') return 'Krishna';
                 try {
                   const students = JSON.parse(localStorage.getItem('wingora_students') || '[]');
                   const match = students.find(s => s.userID === id);

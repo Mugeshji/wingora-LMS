@@ -172,7 +172,7 @@ export default function ManageStudents({ studentsList, onAddStudent, onDeleteStu
                         <td className="py-3 px-3 font-bold">{student.userID}</td>
                         <td className="py-3 px-3 font-mono text-muted-foreground">{student.password}</td>
                         <td className="py-3 px-3 text-right">
-                          {student.userID === 'TC0001' ? (
+                          {student.userID === 'TC0001' || student.userID === 'TC0002' ? (
                             <span className="text-[10px] text-muted-foreground px-2 py-0.5 rounded bg-secondary">Predefined</span>
                           ) : (
                             <button 

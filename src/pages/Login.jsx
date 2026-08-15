@@ -7,15 +7,23 @@ import {
   EyeOff, 
   AlertCircle, 
   ArrowRight,
-  ShieldAlert
+  ShieldAlert,
+  Sun,
+  Moon
 } from 'lucide-react';
 
-export default function Login({ onLoginSuccess, studentsList }) {
+export default function Login({ onLoginSuccess, studentsList, theme, setTheme }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const toggleTheme = () => {
+    if (setTheme) {
+      setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -29,30 +37,42 @@ export default function Login({ onLoginSuccess, studentsList }) {
       return;
     }
 
-    // 1. Check Admin Credentials
-    if (trimmedUser === 'admin' && trimmedPass === 'Mugesh#') {
-      const adminUser = { userID: 'admin', role: 'admin' };
-      localStorage.setItem('wingora_active_user', JSON.stringify(adminUser));
-      onLoginSuccess(adminUser);
-      return;
-    }
+    setIsSubmitting(true);
 
-    // 2. Check Student Credentials
-    const matchedStudent = studentsList.find(
-      student => student.userID === trimmedUser && student.password === trimmedPass
-    );
+    setTimeout(() => {
+      // 1. Check Admin Credentials
+      if (trimmedUser === 'admin' && trimmedPass === 'Mugesh#') {
+        const adminUser = { userID: 'admin', role: 'admin' };
+        localStorage.setItem('wingora_active_user', JSON.stringify(adminUser));
+        setIsSubmitting(false);
+        onLoginSuccess(adminUser);
+        return;
+      }
 
-    if (matchedStudent) {
-      const studentUser = { userID: matchedStudent.userID, role: 'student' };
-      localStorage.setItem('wingora_active_user', JSON.stringify(studentUser));
-      onLoginSuccess(studentUser);
-    } else {
-      setErrorMsg('Invalid UserID or password. Please try again.');
-    }
+      // 2. Check Student Credentials
+      const matchedStudent = studentsList.find(
+        student => student.userID === trimmedUser && student.password === trimmedPass
+      );
+
+      if (matchedStudent) {
+        const studentUser = { userID: matchedStudent.userID, role: 'student' };
+        localStorage.setItem('wingora_active_user', JSON.stringify(studentUser));
+        setIsSubmitting(false);
+        onLoginSuccess(studentUser);
+      } else {
+        setIsSubmitting(false);
+        setErrorMsg('Invalid UserID or password. Please try again.');
+      }
+    }, 1000);
   };
 
   return (
     <div className="login-screen-wrapper">
+      {theme && setTheme && (
+        <button onClick={toggleTheme} className="login-theme-toggle glass-panel" title="Toggle Theme">
+          {theme === 'dark' ? <Sun size={18} className="text-yellow" /> : <Moon size={18} className="text-blue" />}
+        </button>
+      )}
       <motion.div 
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -60,7 +80,7 @@ export default function Login({ onLoginSuccess, studentsList }) {
         className="login-card-container glass-panel"
       >
         {/* Logo and Brand */}
-        <div className="text-center mb-8">
+        <div className="text-center" style={{ marginBottom: '2.5rem' }}>
           <h1 className="brand-title">wingora<span className="brand-sub">LMS</span></h1>
           <p className="brand-tagline">Learning Management System</p>
         </div>
@@ -79,7 +99,7 @@ export default function Login({ onLoginSuccess, studentsList }) {
 
         {/* Credentials Form */}
         <form onSubmit={handleSubmit} className="login-form flex flex-col gap-5">
-          <div className="input-group">
+          <div className="input-group" style={{ marginBottom: '0.75rem' }}>
             <label className="input-label">Username / UserID</label>
             <div className="input-field-wrapper">
               <User size={18} className="field-icon" />
@@ -146,6 +166,33 @@ export default function Login({ onLoginSuccess, studentsList }) {
           padding: 1.5rem;
         }
 
+        .login-theme-toggle {
+          position: fixed;
+          top: 1.5rem;
+          right: 1.5rem;
+          width: 2.75rem;
+          height: 2.75rem;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          background: rgba(13, 17, 28, 0.6);
+          border: 1px solid hsl(var(--card-border) / 0.5);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          transition: var(--transition);
+          z-index: 10;
+        }
+
+        .login-theme-toggle:hover {
+          transform: scale(1.08) translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-theme-toggle:active {
+          transform: scale(0.95);
+        }
+
         .login-card-container {
           width: 100%;
           max-width: 420px;
@@ -153,6 +200,47 @@ export default function Login({ onLoginSuccess, studentsList }) {
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
           border: 1px solid hsl(var(--card-border) / 0.5);
           background: rgba(13, 17, 28, 0.6);
+        }
+
+        /* Light Mode Styles for Login Page */
+        [data-theme='light'] .login-screen-wrapper {
+          background: radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.06) 0%, transparent 60%);
+        }
+
+        [data-theme='light'] .login-theme-toggle {
+          background: rgba(255, 255, 255, 0.7);
+          border-color: hsl(var(--card-border) / 0.8);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme='light'] .login-card-container {
+          background: rgba(255, 255, 255, 0.7);
+          border-color: hsl(var(--card-border) / 0.8);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme='light'] .login-input {
+          background: rgba(255, 255, 255, 0.8);
+          border-color: hsl(var(--card-border) / 1);
+          color: hsl(var(--foreground));
+        }
+
+        [data-theme='light'] .login-input:focus {
+          background: #ffffff;
+          border-color: hsl(var(--primary));
+          box-shadow: 0 0 15px hsl(var(--primary) / 0.15);
+        }
+
+        [data-theme='light'] .brand-title {
+          color: hsl(var(--foreground));
+        }
+
+        .text-yellow {
+          color: #eab308;
+        }
+
+        .text-blue {
+          color: #3b82f6;
         }
 
         .brand-logo-circle {
@@ -267,6 +355,7 @@ export default function Login({ onLoginSuccess, studentsList }) {
           width: 100%;
           padding: 0.95rem;
           font-size: 1rem;
+          margin-top: 1.5rem;
         }
 
         .spinner {

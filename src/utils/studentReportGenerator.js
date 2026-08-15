@@ -60,6 +60,7 @@ export function generateStudentReportPDF(targetUserID = null) {
     const getDisplayName = (id) => {
       if (!id) return 'Student';
       if (id.toUpperCase() === 'TC0001') return 'Nithya';
+      if (id.toUpperCase() === 'TC0002') return 'Krishna';
       try {
         const students = JSON.parse(localStorage.getItem('wingora_students') || '[]');
         const match = students.find(s => s.userID && s.userID.toUpperCase() === id.toUpperCase());
